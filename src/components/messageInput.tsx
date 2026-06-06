@@ -35,13 +35,13 @@ export const MessageInput = ({
 
   return (
     <div className="absolute bottom-0 z-20 w-screen">
-      <div className="mx-auto max-w-4xl p-4 sm:p-6">
+      <div className="mx-auto max-w-4xl px-2 sm:px-4 pb-2 sm:pb-4">
         <div
           ref={inputRef}
-          className="glow-container glass-panel rounded-2xl overflow-hidden"
+          className="glow-container glass-panel rounded-xl sm:rounded-2xl overflow-hidden"
           onMouseMove={handleMouseMove}
         >
-          <div className="relative z-10 flex items-center gap-3 p-3">
+          <div className="relative z-10 flex items-center gap-2 sm:gap-3 p-2 sm:p-3">
             <IconButton
               iconName="24/Microphone"
               isProcessing={isMicRecording}

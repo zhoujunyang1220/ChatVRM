@@ -124,9 +124,9 @@ export const Settings = ({
         />
       </div>
       <div className="h-full overflow-auto">
-        <div className="max-w-2xl mx-auto px-6 py-20">
-          <div className="glass-panel rounded-2xl p-8">
-            <h2 className="text-2xl font-bold text-text-primary mb-8 font-M_PLUS_2">Settings</h2>
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+          <div className="glass-panel rounded-2xl p-6 sm:p-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-6 sm:mb-8 font-M_PLUS_2">Settings</h2>
 
             {/* Language Selection */}
             <section className="mb-8">
@@ -137,7 +137,7 @@ export const Settings = ({
                   <button
                     key={lang.id}
                     onClick={() => onChangeLanguage(lang.id)}
-                    className={`px-4 py-2 rounded-xl border transition-colors text-sm ${
+                    className={`px-4 py-2 min-h-[44px] rounded-xl border transition-colors text-sm ${
                       selectedLanguage === lang.id
                         ? "bg-primary/20 border-primary text-text-primary"
                         : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary"
@@ -177,7 +177,7 @@ export const Settings = ({
                   <button
                     key={model.id}
                     onClick={() => onChangeVrmModel(model.id)}
-                    className={`text-left px-3 py-2.5 rounded-xl border transition-colors ${
+                    className={`text-left px-3 py-2.5 min-h-[44px] rounded-xl border transition-colors ${
                       selectedVrmModelId === model.id
                         ? "bg-primary/20 border-primary text-text-primary"
                         : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary"
@@ -191,7 +191,7 @@ export const Settings = ({
                   <div key={model.id} className="relative group">
                     <button
                       onClick={() => onChangeVrmModel(model.id)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl border transition-colors ${
+                      className={`w-full text-left px-3 py-2.5 min-h-[44px] rounded-xl border transition-colors ${
                         selectedVrmModelId === model.id
                           ? "bg-primary/20 border-primary text-text-primary"
                           : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary"
@@ -202,7 +202,7 @@ export const Settings = ({
                     </button>
                     <button
                       onClick={() => onRemoveCustomModel(model.id)}
-                      className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                       title="Remove"
                     >
                       ×
@@ -247,7 +247,7 @@ export const Settings = ({
                   <button
                     key={character.id}
                     onClick={() => onChangeCharacter(character.id)}
-                    className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
+                    className={`w-full text-left px-4 py-3 min-h-[44px] rounded-xl border transition-colors ${
                       selectedCharacterId === character.id
                         ? "bg-primary/20 border-primary text-text-primary"
                         : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary"

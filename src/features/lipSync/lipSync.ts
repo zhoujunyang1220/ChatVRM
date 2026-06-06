@@ -3,15 +3,28 @@ import { LipSyncAnalyzeResult } from "./lipSyncAnalyzeResult";
 const TIME_DOMAIN_DATA_LENGTH = 2048;
 
 export class LipSync {
-  public readonly audio: AudioContext;
-  public readonly analyser: AnalyserNode;
+  public audio?: AudioContext;
+  public analyser?: AnalyserNode;
   public readonly timeDomainData: Float32Array;
 
-  public constructor(audio: AudioContext) {
-    this.audio = audio;
-
-    this.analyser = audio.createAnalyser();
+  public constructor(audio?: AudioContext) {
     this.timeDomainData = new Float32Array(TIME_DOMAIN_DATA_LENGTH);
+    if (audio) {
+      this.initAudio(audio);
+    }
+  }
+
+  private initAudio(audio: AudioContext) {
+    this.audio = audio;
+    this.analyser = audio.createAnalyser();
+  }
+
+  private ensureAudio(): AudioContext {
+    if (!this.audio) {
+      const ctx = new AudioContext();
+      this.initAudio(ctx);
+    }
+    return this.audio!;
   }
 
   public update(): LipSyncAnalyzeResult {
@@ -32,16 +45,17 @@ export class LipSync {
   }
 
   public async playFromArrayBuffer(buffer: ArrayBuffer, onEnded?: () => void) {
-    if (this.audio.state === "suspended") {
-      await this.audio.resume();
+    const audio = this.ensureAudio();
+    if (audio.state === "suspended") {
+      await audio.resume();
     }
-    const audioBuffer = await this.audio.decodeAudioData(buffer);
+    const audioBuffer = await audio.decodeAudioData(buffer);
 
-    const bufferSource = this.audio.createBufferSource();
+    const bufferSource = audio.createBufferSource();
     bufferSource.buffer = audioBuffer;
 
-    bufferSource.connect(this.audio.destination);
-    bufferSource.connect(this.analyser);
+    bufferSource.connect(audio.destination);
+    bufferSource.connect(this.analyser!);
     bufferSource.start();
     if (onEnded) {
       bufferSource.addEventListener("ended", onEnded);

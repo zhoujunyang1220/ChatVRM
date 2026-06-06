@@ -16,7 +16,7 @@ export const IconButton = ({
   return (
     <button
       {...rest}
-      className={`rounded-full text-sm p-3 text-center inline-flex items-center justify-center transition-all duration-200
+      className={`rounded-full text-sm p-3 min-w-[44px] min-h-[44px] text-center inline-flex items-center justify-center transition-all duration-200
         bg-primary hover:bg-primary-hover active:bg-primary-press disabled:bg-primary-disabled text-white
         disabled:opacity-40 disabled:cursor-not-allowed
         ${rest.className || ""}
