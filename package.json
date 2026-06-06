@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3006",
     "build": "next build",
     "start": "next start",
     "export": "next export",
@@ -24,7 +24,6 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "three": "^0.149.0",
-    "typescript": "5.0.2",
     "window.ai": "^0.2.1"
   },
   "devDependencies": {
@@ -37,6 +36,7 @@
     "@types/three": "0.149.0",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.21",
-    "tailwindcss": "^3.3.1"
+    "tailwindcss": "^3.3.1",
+    "typescript": "6.0.3"
   }
 }

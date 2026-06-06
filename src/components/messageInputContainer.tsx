@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 type Props = {
   isChatProcessing: boolean;
   onChatProcessStart: (text: string) => void;
+  language?: string;
 };
 
 /**
@@ -15,6 +16,7 @@ type Props = {
 export const MessageInputContainer = ({
   isChatProcessing,
   onChatProcessStart,
+  language = "en-US",
 }: Props) => {
   const [userMessage, setUserMessage] = useState("");
   const [speechRecognition, setSpeechRecognition] =
@@ -62,20 +64,31 @@ export const MessageInputContainer = ({
     const SpeechRecognition =
       window.webkitSpeechRecognition || window.SpeechRecognition;
 
-    // FirefoxなどSpeechRecognition非対応環境対策
     if (!SpeechRecognition) {
       return;
     }
+
+    // Map our language IDs to speech recognition language codes
+    const langMap: Record<string, string> = {
+      en: "en-US",
+      zh: "zh-CN",
+      ja: "ja-JP",
+      ko: "ko-KR",
+      es: "es-ES",
+      fr: "fr-FR",
+      de: "de-DE",
+    };
+
     const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.interimResults = true; // 認識の途中結果を返す
-    recognition.continuous = false; // 発言の終了時に認識を終了する
+    recognition.lang = langMap[language] || "en-US";
+    recognition.interimResults = true;
+    recognition.continuous = false;
 
     recognition.addEventListener("result", handleRecognitionResult);
     recognition.addEventListener("end", handleRecognitionEnd);
 
     setSpeechRecognition(recognition);
-  }, [handleRecognitionResult, handleRecognitionEnd]);
+  }, [handleRecognitionResult, handleRecognitionEnd, language]);
 
   useEffect(() => {
     if (!isChatProcessing) {

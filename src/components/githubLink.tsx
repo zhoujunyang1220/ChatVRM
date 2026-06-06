@@ -2,22 +2,20 @@ import { buildUrl } from "@/utils/buildUrl";
 
 export const GitHubLink = () => {
   return (
-    <div className="absolute right-0 z-10 m-24">
+    <div className="absolute bottom-4 left-4 z-10">
       <a
         draggable={false}
         href="https://github.com/zoan37/ChatVRM"
         rel="noopener noreferrer"
         target="_blank"
       >
-        <div className="p-8 rounded-16 bg-[#1F2328] hover:bg-[#33383E] active:bg-[565A60] flex">
-          <img
-            alt="https://github.com/zoan37/ChatVRM"
-            height={24}
-            width={24}
-            src={buildUrl("/github-mark-white.svg")}
-          ></img>
-          <div className="mx-4 text-white font-M_PLUS_2 font-bold">Fork me</div>
-        </div>
+        <img
+          alt="GitHub"
+          height={20}
+          width={20}
+          src={buildUrl("/github-mark-white.svg")}
+          className="opacity-40 hover:opacity-70 transition-opacity"
+        ></img>
       </a>
     </div>
   );

@@ -1,32 +1,25 @@
-const { light, dark } = require("@charcoal-ui/theme");
-const { createTailwindConfig } = require("@charcoal-ui/tailwind-config");
-/**
- * @type {import('tailwindcss/tailwind-config').TailwindConfig}
- */
+/** @type {import('tailwindcss/tailwind-config').TailwindConfig} */
 module.exports = {
-  darkMode: true,
+  darkMode: ["variant", "[data-theme='dark'] &"],
   content: ["./src/**/*.tsx", "./src/**/*.html"],
-  presets: [
-    createTailwindConfig({
-      version: "v3",
-      theme: {
-        ":root": light,
-      },
-    }),
-  ],
   theme: {
     extend: {
       colors: {
-        primary: "#856292",
-        "primary-hover": "#8E76A1",
-        "primary-press": "#988BB0",
-        "primary-disabled": "#6F48694D",
-        secondary: "#FF617F",
-        "secondary-hover": "#FF849B",
-        "secondary-press": "#FF9EB1",
-        "secondary-disabled": "#FF617F4D",
-        base: "#FBE2CA",
-        "text-primary": "#514062",
+        primary: "var(--color-primary)",
+        "primary-hover": "var(--color-primary-hover)",
+        "primary-press": "var(--color-primary-press)",
+        "primary-disabled": "var(--color-primary-disabled)",
+        secondary: "var(--color-secondary)",
+        "secondary-hover": "var(--color-secondary-hover)",
+        "secondary-press": "var(--color-secondary-press)",
+        "secondary-disabled": "var(--color-secondary-disabled)",
+        surface1: "var(--color-surface1)",
+        "surface1-hover": "var(--color-surface1-hover)",
+        surface3: "var(--color-surface3)",
+        "surface3-hover": "var(--color-surface3-hover)",
+        base: "var(--color-base)",
+        "text-primary": "var(--color-text-primary)",
+        "text-secondary": "var(--color-text-secondary)",
       },
       fontFamily: {
         M_PLUS_2: ["var(--font-m-plus-2)"],
@@ -34,5 +27,5 @@ module.exports = {
       },
     },
   },
-  plugins: [require("@tailwindcss/line-clamp")],
+  plugins: [],
 };

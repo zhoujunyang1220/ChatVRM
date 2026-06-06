@@ -1,85 +1,86 @@
-import React, { useEffect, useState, cache } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { IconButton } from "./iconButton";
 import { TextButton } from "./textButton";
 import { Message } from "@/features/messages/messages";
-import {
-  KoeiroParam,
-  PRESET_A,
-  PRESET_B,
-  PRESET_C,
-  PRESET_D,
-} from "@/features/constants/koeiroParam";
 import { Link } from "./link";
-import { getVoices } from "@/features/elevenlabs/elevenlabs";
-import { ElevenLabsParam } from "@/features/constants/elevenLabsParam";
 import { RestreamTokens } from "./restreamTokens";
-import Cookies from 'js-cookie';
+import { CHARACTER_PRESETS } from "@/features/constants/characterPresets";
+import { VRM_MODEL_PRESETS, CustomVrmModel } from "@/features/constants/vrmModelPresets";
+import { LANGUAGE_PRESETS } from "@/features/constants/languagePresets";
+
+const BACKEND_URL = "/api";
+
+type Voice = {
+  id: string;
+  name: string;
+  gender: string;
+  accent: string;
+  language: string;
+};
 
 type Props = {
-  openAiKey: string;
-  elevenLabsKey: string;
-  openRouterKey: string;
   systemPrompt: string;
   chatLog: Message[];
-  elevenLabsParam: ElevenLabsParam;
-  koeiroParam: KoeiroParam;
+  selectedVoiceId: string;
+  selectedCharacterId: string;
+  selectedVrmModelId: string;
+  selectedLanguage: string;
   onClickClose: () => void;
-  onChangeAiKey: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onChangeOpenRouterKey: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onChangeElevenLabsKey: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onChangeElevenLabsVoice: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   onChangeSystemPrompt: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onChangeChatLog: (index: number, text: string) => void;
-  onChangeKoeiroParam: (x: number, y: number) => void;
+  onChangeCharacter: (characterId: string) => void;
+  onChangeVrmModel: (modelId: string) => void;
+  onChangeLanguage: (languageId: string) => void;
   onClickOpenVrmFile: () => void;
   onClickResetChatLog: () => void;
   onClickResetSystemPrompt: () => void;
   backgroundImage: string;
   onChangeBackgroundImage: (image: string) => void;
+  onVoiceChange: (voiceId: string) => void;
   onRestreamTokensUpdate?: (tokens: { access_token: string; refresh_token: string; } | null) => void;
   onTokensUpdate: (tokens: any) => void;
   onChatMessage: (message: string) => void;
+  customModels: CustomVrmModel[];
+  onAddCustomModel: (name: string, file: File) => void;
+  onRemoveCustomModel: (id: string) => void;
 };
+
 export const Settings = ({
-  openAiKey,
-  elevenLabsKey,
-  openRouterKey,
-  chatLog,
   systemPrompt,
-  elevenLabsParam,
-  koeiroParam,
+  chatLog,
+  selectedVoiceId,
+  selectedCharacterId,
+  selectedVrmModelId,
+  selectedLanguage,
   onClickClose,
   onChangeSystemPrompt,
-  onChangeAiKey,
-  onChangeOpenRouterKey,
-  onChangeElevenLabsKey,
-  onChangeElevenLabsVoice,
   onChangeChatLog,
-  onChangeKoeiroParam,
+  onChangeCharacter,
+  onChangeVrmModel,
+  onChangeLanguage,
   onClickOpenVrmFile,
   onClickResetChatLog,
   onClickResetSystemPrompt,
   backgroundImage,
   onChangeBackgroundImage,
+  onVoiceChange,
   onRestreamTokensUpdate = () => {},
   onTokensUpdate,
   onChatMessage,
+  customModels,
+  onAddCustomModel,
+  onRemoveCustomModel,
 }: Props) => {
-
-  const [elevenLabsVoices, setElevenLabsVoices] = useState<any[]>([]);
+  const [voices, setVoices] = useState<Voice[]>([]);
+  const [newModelName, setNewModelName] = useState("");
+  const customFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Check if ElevenLabs API key exists before fetching voices
-    if (elevenLabsKey) {
-      getVoices(elevenLabsKey).then((data) => {
-        console.log('getVoices');
-        console.log(data);
-
-        const voices = data.voices;
-        setElevenLabsVoices(voices);
-      });
-    }
-  }, [elevenLabsKey]); // Added elevenLabsKey as a dependency
+    fetch(`${BACKEND_URL}/voices`)
+      .then((res) => res.json())
+      .then((data) => setVoices(data.voices))
+      .catch((err) => console.error("Failed to load voices:", err));
+  }, []);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -88,175 +89,231 @@ export const Settings = ({
       reader.onloadend = () => {
         const base64String = reader.result as string;
         onChangeBackgroundImage(base64String);
-        localStorage.setItem('backgroundImage', base64String);
+        localStorage.setItem("backgroundImage", base64String);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleRemoveBackground = () => {
-    onChangeBackgroundImage('');
-    localStorage.removeItem('backgroundImage');
+    onChangeBackgroundImage("");
+    localStorage.removeItem("backgroundImage");
+  };
+
+  const handleAddCustomModel = () => {
+    customFileInputRef.current?.click();
+  };
+
+  const handleCustomFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || !newModelName.trim()) return;
+    const file = files[0];
+    if (!file) return;
+    onAddCustomModel(newModelName.trim(), file);
+    setNewModelName("");
+    event.target.value = "";
   };
 
   return (
-    <div className="absolute z-40 w-full h-full bg-white/80 backdrop-blur ">
-      <div className="absolute m-24">
+    <div className="absolute z-40 w-full h-full bg-black/60 backdrop-blur-sm">
+      <div className="absolute top-6 left-6 z-10">
         <IconButton
           iconName="24/Close"
           isProcessing={false}
           onClick={onClickClose}
-        ></IconButton>
+        />
       </div>
-      <div className="max-h-full overflow-auto">
-        <div className="text-text1 max-w-3xl mx-auto px-24 py-64 ">
-          <div className="my-24 typography-32 font-bold">Settings</div>
-          <div className="my-24">
-            <div className="my-16 typography-20 font-bold">OpenRouter API</div>
-            <input
-              type="text"
-              placeholder="OpenRouter API key"
-              value={openRouterKey}
-              onChange={onChangeOpenRouterKey}
-              className="my-4 px-16 py-8 w-full h-40 bg-surface3 hover:bg-surface3-hover rounded-4 text-ellipsis"
-            ></input>
-            <div>
-              Enter your OpenRouter API key for custom access. You can get an API key at the&nbsp;
-              <Link
-                url="https://openrouter.ai/"
-                label="OpenRouter website"
-              />. By default, this app uses its own OpenRouter API key for people to try things out easily, but that may run of credits and need to be refilled.
-            </div>
-          </div>
-          <div className="my-24">
-            <div className="my-16 typography-20 font-bold">Eleven Labs API</div>
-            <input
-              type="text"
-              placeholder="ElevenLabs API key"
-              value={elevenLabsKey}
-              onChange={onChangeElevenLabsKey}
-              className="my-4 px-16 py-8 w-full h-40 bg-surface3 hover:bg-surface3-hover rounded-4 text-ellipsis"
-            ></input>
-            <div>
-              Enter your ElevenLabs API key to enable text to speech. You can get an API key at the&nbsp;
-              <Link
-                url="https://beta.elevenlabs.io/"
-                label="ElevenLabs website"
-              />.
-            </div>
-          </div>
-          <div className="my-40">
-            <div className="my-16 typography-20 font-bold">
-              Voice Selection
-            </div>
-            <div className="my-16">
-              Select among the voices in ElevenLabs (including custom voices):
-            </div>
-            <div className="my-8">
-              <select className="h-40 px-8"
-                id="select-dropdown"
-                onChange={onChangeElevenLabsVoice}
-                value={elevenLabsParam.voiceId}
+      <div className="h-full overflow-auto">
+        <div className="max-w-2xl mx-auto px-6 py-20">
+          <div className="glass-panel rounded-2xl p-8">
+            <h2 className="text-2xl font-bold text-text-primary mb-8 font-M_PLUS_2">Settings</h2>
+
+            {/* Language Selection */}
+            <section className="mb-8">
+              <h3 className="text-lg font-bold text-text-primary mb-3 font-M_PLUS_2">Language</h3>
+              <p className="text-sm text-text-secondary mb-3">Choose the language you want to practice.</p>
+              <div className="flex flex-wrap gap-2">
+                {LANGUAGE_PRESETS.map((lang) => (
+                  <button
+                    key={lang.id}
+                    onClick={() => onChangeLanguage(lang.id)}
+                    className={`px-4 py-2 rounded-xl border transition-colors text-sm ${
+                      selectedLanguage === lang.id
+                        ? "bg-primary/20 border-primary text-text-primary"
+                        : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary"
+                    }`}
+                  >
+                    <span className="font-bold">{lang.nativeName}</span>
+                    <span className="ml-1.5 opacity-70">{lang.name}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Voice Selection */}
+            <section className="mb-8">
+              <h3 className="text-lg font-bold text-text-primary mb-3 font-M_PLUS_2">Voice</h3>
+              <select
+                className="w-full h-11 px-4 rounded-xl bg-surface1 hover:bg-surface1-hover text-text-primary border border-white/10 outline-none transition-colors cursor-pointer"
+                onChange={(e) => onVoiceChange(e.target.value)}
+                value={selectedVoiceId}
               >
-                {elevenLabsVoices.map((voice, index) => (
-                  <option key={index} value={voice.voice_id}>
+                {voices
+                  .filter((v) => !selectedLanguage || v.language === selectedLanguage)
+                  .map((voice) => (
+                  <option key={voice.id} value={voice.id}>
                     {voice.name}
                   </option>
                 ))}
               </select>
-            </div>
-          </div>
-          <div className="my-40">
-            <div className="my-16 typography-20 font-bold">
-              Character Model
-            </div>
-            <div className="my-8">
-              <TextButton onClick={onClickOpenVrmFile}>Open VRM</TextButton>
-            </div>
-          </div>
-          <div className="my-40">
-            <div className="my-8">
-              <div className="my-16 typography-20 font-bold">
-                Character Settings (System Prompt)
-              </div>
-              <TextButton onClick={onClickResetSystemPrompt}>
-                Reset character settings
-              </TextButton>
-            </div>
+            </section>
 
-            <textarea
-              value={systemPrompt}
-              onChange={onChangeSystemPrompt}
-              className="px-16 py-8  bg-surface1 hover:bg-surface1-hover h-168 rounded-8 w-full"
-            ></textarea>
-          </div>
-          <div className="my-40">
-            <div className="my-16 typography-20 font-bold">
-              Background Image
-            </div>
-            <div className="my-16">Choose a custom background image:</div>
-            <div className="my-8 flex flex-col gap-4">
+            {/* VRM Model */}
+            <section className="mb-8">
+              <h3 className="text-lg font-bold text-text-primary mb-3 font-M_PLUS_2">Character Model</h3>
+              <p className="text-sm text-text-secondary mb-3">Choose a preset model or add your own .vrm file.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                {VRM_MODEL_PRESETS.map((model) => (
+                  <button
+                    key={model.id}
+                    onClick={() => onChangeVrmModel(model.id)}
+                    className={`text-left px-3 py-2.5 rounded-xl border transition-colors ${
+                      selectedVrmModelId === model.id
+                        ? "bg-primary/20 border-primary text-text-primary"
+                        : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary"
+                    }`}
+                  >
+                    <div className="font-bold text-sm">{model.name}</div>
+                    <div className="text-xs mt-0.5 opacity-70">{model.description}</div>
+                  </button>
+                ))}
+                {customModels.map((model) => (
+                  <div key={model.id} className="relative group">
+                    <button
+                      onClick={() => onChangeVrmModel(model.id)}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl border transition-colors ${
+                        selectedVrmModelId === model.id
+                          ? "bg-primary/20 border-primary text-text-primary"
+                          : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary"
+                      }`}
+                    >
+                      <div className="font-bold text-sm">{model.name}</div>
+                      <div className="text-xs mt-0.5 opacity-70">Custom model</div>
+                    </button>
+                    <button
+                      onClick={() => onRemoveCustomModel(model.id)}
+                      className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <label className="block text-xs text-text-secondary mb-1">Model Name</label>
+                  <input
+                    type="text"
+                    value={newModelName}
+                    onChange={(e) => setNewModelName(e.target.value)}
+                    placeholder="Enter a name for your model"
+                    className="w-full h-11 px-4 rounded-xl bg-surface1 hover:bg-surface1-hover text-text-primary border border-white/10 outline-none transition-colors text-sm"
+                  />
+                </div>
+                <button
+                  onClick={handleAddCustomModel}
+                  disabled={!newModelName.trim()}
+                  className="h-11 px-4 rounded-xl bg-primary/20 hover:bg-primary/30 border border-primary text-text-primary text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Add VRM
+                </button>
+              </div>
               <input
                 type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="my-4"
+                className="hidden"
+                accept=".vrm"
+                ref={customFileInputRef}
+                onChange={handleCustomFileChange}
               />
-              {backgroundImage && (
-                <div className="flex flex-col gap-4">
-                  <div className="my-8">
-                    <img
-                      src={backgroundImage}
-                      alt="Background Preview"
-                      className="max-w-[200px] rounded-4"
-                    />
+            </section>
+
+            {/* Character Preset */}
+            <section className="mb-8">
+              <h3 className="text-lg font-bold text-text-primary mb-3 font-M_PLUS_2">Character</h3>
+              <p className="text-sm text-text-secondary mb-3">Choose a coach personality. This will update the system prompt and suggest a voice.</p>
+              <div className="grid gap-2">
+                {CHARACTER_PRESETS.map((character) => (
+                  <button
+                    key={character.id}
+                    onClick={() => onChangeCharacter(character.id)}
+                    className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
+                      selectedCharacterId === character.id
+                        ? "bg-primary/20 border-primary text-text-primary"
+                        : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary"
+                    }`}
+                  >
+                    <div className="font-bold text-sm">{character.name}</div>
+                    <div className="text-xs mt-0.5 opacity-70">{character.description}</div>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* System Prompt */}
+            <section className="mb-8">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-bold text-text-primary font-M_PLUS_2">System Prompt</h3>
+                <TextButton onClick={onClickResetSystemPrompt}>Reset</TextButton>
+              </div>
+              <textarea
+                value={systemPrompt}
+                onChange={onChangeSystemPrompt}
+                className="w-full h-40 px-4 py-3 rounded-xl bg-surface1 hover:bg-surface1-hover text-text-primary border border-white/10 outline-none resize-none transition-colors typography-14"
+              />
+            </section>
+
+            {/* Background */}
+            <section className="mb-8">
+              <h3 className="text-lg font-bold text-text-primary mb-3 font-M_PLUS_2">Background</h3>
+              <div className="flex flex-col gap-3">
+                <input type="file" accept="image/*" onChange={handleImageUpload} className="text-text-secondary text-sm" />
+                {backgroundImage && (
+                  <div className="flex items-center gap-4">
+                    <img src={backgroundImage} alt="Preview" className="w-24 h-16 object-cover rounded-xl" />
+                    <TextButton onClick={handleRemoveBackground}>Remove</TextButton>
                   </div>
-                  <div className="my-8">
-                    <TextButton onClick={handleRemoveBackground}>
-                      Remove Background
-                    </TextButton>
-                  </div>
+                )}
+              </div>
+            </section>
+
+            <RestreamTokens onTokensUpdate={onTokensUpdate} onChatMessage={onChatMessage} />
+
+            {/* Conversation History */}
+            {chatLog.length > 0 && (
+              <section className="mb-8">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-bold text-text-primary font-M_PLUS_2">Conversation History</h3>
+                  <TextButton onClick={onClickResetChatLog}>Clear</TextButton>
                 </div>
-              )}
-              <div className="text-sm text-gray-600">
-                The background image will be saved in your browser and restored when you return.
-              </div>
-            </div>
-          </div>
-          <RestreamTokens onTokensUpdate={onTokensUpdate} onChatMessage={onChatMessage} />
-          {chatLog.length > 0 && (
-            <div className="my-40">
-              <div className="my-8 grid-cols-2">
-                <div className="my-16 typography-20 font-bold">Conversation History</div>
-                <TextButton onClick={onClickResetChatLog}>
-                  Reset conversation history
-                </TextButton>
-              </div>
-              <div className="my-8">
-                {chatLog.map((value, index) => {
-                  return (
-                    <div
-                      key={index}
-                      className="my-8 grid grid-flow-col  grid-cols-[min-content_1fr] gap-x-fixed"
-                    >
-                      <div className="w-[64px] py-8">
-                        {value.role === "assistant" ? "Character" : "You"}
-                      </div>
+                <div className="space-y-2 max-h-64 overflow-auto">
+                  {chatLog.map((value, index) => (
+                    <div key={index} className="flex gap-3 items-start">
+                      <span className="text-xs font-bold text-secondary mt-3 w-16 shrink-0 uppercase">
+                        {value.role === "assistant" ? "AI" : "You"}
+                      </span>
                       <input
-                        key={index}
-                        className="bg-surface1 hover:bg-surface1-hover rounded-8 w-full px-16 py-8"
+                        className="flex-1 px-4 py-2 rounded-xl bg-surface1 hover:bg-surface1-hover text-text-primary border border-white/5 outline-none transition-colors text-sm"
                         type="text"
                         value={value.content}
-                        onChange={(event) => {
-                          onChangeChatLog(index, event.target.value);
-                        }}
-                      ></input>
+                        onChange={(event) => onChangeChatLog(index, event.target.value)}
+                      />
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
         </div>
       </div>
     </div>

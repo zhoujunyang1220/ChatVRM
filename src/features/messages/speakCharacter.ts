@@ -1,9 +1,9 @@
 import { wait } from "@/utils/wait";
-import { synthesizeVoice } from "../elevenlabs/elevenlabs";
 import { Viewer } from "../vrmViewer/viewer";
 import { Screenplay } from "./messages";
-import { Talk } from "./messages";
 import { ElevenLabsParam } from "../constants/elevenLabsParam";
+
+const BACKEND_URL = "/api";
 
 const createSpeakCharacter = () => {
   let lastTime = 0;
@@ -12,9 +12,10 @@ const createSpeakCharacter = () => {
 
   return (
     screenplay: Screenplay,
-    elevenLabsKey: string,
-    elevenLabsParam: ElevenLabsParam,
+    _elevenLabsKey: string,
+    _elevenLabsParam: ElevenLabsParam,
     viewer: Viewer,
+    voiceId: string,
     onStart?: () => void,
     onComplete?: () => void
   ) => {
@@ -24,13 +25,13 @@ const createSpeakCharacter = () => {
         await wait(1000 - (now - lastTime));
       }
 
-      // if elevenLabsKey is not set, do not fetch audio
-      if (!elevenLabsKey || elevenLabsKey.trim() == "") {
-        console.log("elevenLabsKey is not set");
+      const buffer = await fetchAudio(screenplay.talk.message, voiceId).catch((err) => {
+        console.error('fetchAudio failed:', err, 'voiceId:', voiceId, 'text:', screenplay.talk.message);
         return null;
+      });
+      if (!buffer) {
+        console.warn('Audio buffer is null/empty for voiceId:', voiceId);
       }
-
-      const buffer = await fetchAudio(screenplay.talk, elevenLabsKey, elevenLabsParam).catch(() => null);
       lastTime = Date.now();
       return buffer;
     });
@@ -39,7 +40,6 @@ const createSpeakCharacter = () => {
     prevSpeakPromise = Promise.all([fetchPromise, prevSpeakPromise]).then(([audioBuffer]) => {
       onStart?.();
       if (!audioBuffer) {
-        // pass along screenplay to change avatar expression
         return viewer.model?.speak(null, screenplay);
       }
       return viewer.model?.speak(audioBuffer, screenplay);
@@ -52,26 +52,19 @@ const createSpeakCharacter = () => {
 
 export const speakCharacter = createSpeakCharacter();
 
-export const fetchAudio = async (
-  talk: Talk, 
-  elevenLabsKey: string,
-  elevenLabsParam: ElevenLabsParam,
-  ): Promise<ArrayBuffer> => {
-  const ttsVoice = await synthesizeVoice(
-    talk.message,
-    talk.speakerX,
-    talk.speakerY,
-    talk.style,
-    elevenLabsKey,
-    elevenLabsParam
-  );
-  const url = ttsVoice.audio;
+export const fetchAudio = async (text: string, voiceId: string = "en-US-JennyNeural"): Promise<ArrayBuffer> => {
+  const response = await fetch(`${BACKEND_URL}/tts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: text,
+      voice_id: voiceId,
+    }),
+  });
 
-  if (url == null) {
-    throw new Error("Something went wrong");
+  if (!response.ok) {
+    throw new Error(`TTS request failed: ${response.status}`);
   }
 
-  const resAudio = await fetch(url);
-  const buffer = await resAudio.arrayBuffer();
-  return buffer;
+  return await response.arrayBuffer();
 };

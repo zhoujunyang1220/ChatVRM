@@ -32,6 +32,9 @@ export class LipSync {
   }
 
   public async playFromArrayBuffer(buffer: ArrayBuffer, onEnded?: () => void) {
+    if (this.audio.state === "suspended") {
+      await this.audio.resume();
+    }
     const audioBuffer = await this.audio.decodeAudioData(buffer);
 
     const bufferSource = this.audio.createBufferSource();

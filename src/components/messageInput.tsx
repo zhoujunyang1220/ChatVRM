@@ -1,3 +1,4 @@
+import { useRef, useCallback, useState } from "react";
 import { IconButton } from "./iconButton";
 
 type Props = {
@@ -11,58 +12,63 @@ type Props = {
   onClickSendButton: (event: React.MouseEvent<HTMLButtonElement>) => void;
   onClickMicButton: (event: React.MouseEvent<HTMLButtonElement>) => void;
 };
+
 export const MessageInput = ({
   userMessage,
   isMicRecording,
   isChatProcessing,
   onChangeUserMessage,
   onKeyDownUserMessage,
-  onClickMicButton,
   onClickSendButton,
+  onClickMicButton,
 }: Props) => {
+  const inputRef = useRef<HTMLDivElement>(null);
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    inputRef.current?.style.setProperty('--mouse-x', `${x}%`);
+    inputRef.current?.style.setProperty('--mouse-y', `${y}%`);
+  }, []);
+
   return (
     <div className="absolute bottom-0 z-20 w-screen">
-      <div className="bg-base text-black">
-        <div className="mx-auto max-w-4xl p-16">
-          <div className="grid grid-flow-col gap-[8px] grid-cols-[min-content_1fr_min-content]">
+      <div className="mx-auto max-w-4xl p-4 sm:p-6">
+        <div
+          ref={inputRef}
+          className="glow-container glass-panel rounded-2xl overflow-hidden"
+          onMouseMove={handleMouseMove}
+        >
+          <div className="relative z-10 flex items-center gap-3 p-3">
             <IconButton
               iconName="24/Microphone"
-              className="bg-secondary hover:bg-secondary-hover active:bg-secondary-press disabled:bg-secondary-disabled"
               isProcessing={isMicRecording}
               disabled={isChatProcessing}
               onClick={onClickMicButton}
+              className={isMicRecording ? "!bg-secondary" : ""}
             />
             <input
               type="text"
-              placeholder="Message"
+              placeholder="Type a message or use the microphone..."
               onChange={onChangeUserMessage}
               onKeyDown={onKeyDownUserMessage}
               disabled={isChatProcessing}
-              className="bg-surface1 hover:bg-surface1-hover focus:bg-surface1 disabled:bg-surface1-disabled disabled:text-primary-disabled rounded-16 w-full px-16 text-text-primary typography-16 font-M_PLUS_2 font-bold disabled"
+              className="flex-1 bg-transparent text-text-primary typography-16 font-M_PLUS_2 placeholder-text-secondary outline-none border-none"
               value={userMessage}
-            ></input>
-
+            />
             <IconButton
               iconName="24/Send"
-              className="bg-secondary hover:bg-secondary-hover active:bg-secondary-press disabled:bg-secondary-disabled"
               isProcessing={isChatProcessing}
               disabled={isChatProcessing || !userMessage}
               onClick={onClickSendButton}
             />
           </div>
         </div>
-        <div className="py-4 bg-[#413D43] text-center text-white font-Montserrat">
-          powered by&nbsp;
-          <a target="_blank" href="https://openrouter.ai/" className="underline">
-            OpenRouter
-          </a>,&nbsp;
-          <a target="_blank" href="https://beta.elevenlabs.io/" className="underline">
-            ElevenLabs
-          </a>,&nbsp;
-          <a target="_blank" href="https://vroid.com/" className="underline">
-            VRoid
-          </a>
-        </div>
+      </div>
+      <div className="py-3 bg-transparent text-center text-text-secondary text-xs font-Montserrat tracking-wider">
+        powered by DeepSeek &middot; three-vrm &middot; VRoid
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { KnownIconType } from "@charcoal-ui/icons";
 import { ButtonHTMLAttributes } from "react";
+
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   iconName: keyof KnownIconType;
   isProcessing: boolean;
@@ -15,8 +16,10 @@ export const IconButton = ({
   return (
     <button
       {...rest}
-      className={`bg-primary hover:bg-primary-hover active:bg-primary-press disabled:bg-primary-disabled text-white rounded-16 text-sm p-8 text-center inline-flex items-center mr-2
-        ${rest.className}
+      className={`rounded-full text-sm p-3 text-center inline-flex items-center justify-center transition-all duration-200
+        bg-primary hover:bg-primary-hover active:bg-primary-press disabled:bg-primary-disabled text-white
+        disabled:opacity-40 disabled:cursor-not-allowed
+        ${rest.className || ""}
       `}
     >
       {isProcessing ? (
@@ -24,7 +27,7 @@ export const IconButton = ({
       ) : (
         <pixiv-icon name={iconName} scale="1"></pixiv-icon>
       )}
-      {label && <div className="mx-4 font-M_PLUS_2 font-bold">{label}</div>}
+      {label && <div className="mx-2 font-M_PLUS_2 font-bold text-sm">{label}</div>}
     </button>
   );
 };
