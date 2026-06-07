@@ -14,12 +14,17 @@ export const MessageInputContainer = ({
   language = "en-US",
 }: Props) => {
   const [userMessage, setUserMessage] = useState("");
-  const [speechRecognition, setSpeechRecognition] =
-    useState<SpeechRecognition>();
   const [isMicRecording, setIsMicRecording] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [hasMicSupport, setHasMicSupport] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isProcessingRef = useRef(false);
+  const micActiveRef = useRef(false);        // Whether mic should auto-restart
+  const speechRecognitionRef = useRef<SpeechRecognition | null>(null); // Current instance
+  const langRef = useRef(language);
+
+  useEffect(() => { isProcessingRef.current = isChatProcessing; }, [isChatProcessing]);
+  useEffect(() => { langRef.current = language; }, [language]);
 
   useEffect(() => {
     setHasMicSupport(!!(window.webkitSpeechRecognition || window.SpeechRecognition));
@@ -62,81 +67,101 @@ export const MessageInputContainer = ({
 
   const handleRecognitionResult = useCallback(
     (event: SpeechRecognitionEvent) => {
-      const text = event.results[0][0].transcript;
+      const result = event.results[event.results.length - 1];
+      const text = result[0].transcript;
       setUserMessage(text);
 
-      if (event.results[0].isFinal) {
-        setUserMessage(text);
-        onChatProcessStart(text);
+      if (result.isFinal && text.trim()) {
+        if (!isProcessingRef.current) {
+          isProcessingRef.current = true;
+          onChatProcessStart(text);
+        }
       }
     },
     [onChatProcessStart]
   );
 
+  /** Create a fresh SpeechRecognition instance and start listening */
+  const startListening = useCallback(() => {
+    const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = langRef.current;
+    recognition.interimResults = true;
+    recognition.continuous = false; // Single utterance — auto-restart in onEnd
+
+    recognition.addEventListener("result", handleRecognitionResult);
+    recognition.addEventListener("end", handleRecognitionEnd);
+
+    try {
+      recognition.start();
+      speechRecognitionRef.current = recognition;
+      setIsMicRecording(true);
+    } catch (err) {
+      console.warn("SpeechRecognition.start failed:", err);
+      speechRecognitionRef.current = null;
+      setIsMicRecording(false);
+    }
+  }, [handleRecognitionResult]);
+  // Store in ref so handleRecognitionEnd can access it without creating a dep cycle
+  const startListeningRef = useRef(startListening);
+  startListeningRef.current = startListening;
+
   const handleRecognitionEnd = useCallback(() => {
-    setIsMicRecording(false);
+    if (micActiveRef.current) {
+      // Auto-restart for continuous conversation
+      startListeningRef.current();
+    } else {
+      speechRecognitionRef.current = null;
+      setIsMicRecording(false);
+    }
   }, []);
 
   const handleClickMicButton = useCallback(() => {
     if (!hasMicSupport) return;
+    initAudioContext();
 
-    initAudioContext(); // Must be called from user gesture on mobile
-
-    if (isMicRecording) {
-      speechRecognition?.abort();
+    if (micActiveRef.current) {
+      // Stop mic
+      micActiveRef.current = false;
+      speechRecognitionRef.current?.abort();
+      speechRecognitionRef.current = null;
       setIsMicRecording(false);
       return;
     }
 
-    // Request microphone permission explicitly on mobile
+    // Start mic — fresh instance each time (Chrome doesn't allow reusing ended ones)
+    micActiveRef.current = true;
+
+    const doStart = () => {
+      if (micActiveRef.current) startListening();
+    };
+
     if (navigator.mediaDevices?.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ audio: true })
+      const timeout = setTimeout(() => {
+        console.warn("getUserMedia timed out — mic may not be available");
+      }, 5000);
+
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
         .then(() => {
-          speechRecognition?.start();
-          setIsMicRecording(true);
+          clearTimeout(timeout);
+          doStart();
         })
         .catch((err) => {
+          clearTimeout(timeout);
           console.warn("Microphone permission denied:", err);
         });
     } else {
-      speechRecognition?.start();
-      setIsMicRecording(true);
+      doStart();
     }
-  }, [isMicRecording, speechRecognition, hasMicSupport]);
+  }, [hasMicSupport, startListening]);
 
   const handleClickSendButton = useCallback(() => {
     initAudioContext(); // Must be called from user gesture on mobile
     onChatProcessStart(userMessage);
   }, [onChatProcessStart, userMessage]);
-
-  useEffect(() => {
-    const SpeechRecognition =
-      window.webkitSpeechRecognition || window.SpeechRecognition;
-
-    if (!SpeechRecognition) {
-      return;
-    }
-
-    const langMap: Record<string, string> = {
-      en: "en-US",
-      zh: "zh-CN",
-      ja: "ja-JP",
-      ko: "ko-KR",
-      es: "es-ES",
-      fr: "fr-FR",
-      de: "de-DE",
-    };
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = langMap[language] || "en-US";
-    recognition.interimResults = true;
-    recognition.continuous = false;
-
-    recognition.addEventListener("result", handleRecognitionResult);
-    recognition.addEventListener("end", handleRecognitionEnd);
-
-    setSpeechRecognition(recognition);
-  }, [handleRecognitionResult, handleRecognitionEnd, language]);
 
   useEffect(() => {
     if (!isChatProcessing) {

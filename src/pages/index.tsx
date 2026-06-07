@@ -223,6 +223,9 @@ export default function Home() {
             receivedMessage = receivedMessage.slice(tag.length);
           }
 
+          // Show accumulated text immediately for fast visual feedback
+          setAssistantMessage((sentences.join(" ") + " " + receivedMessage).trim());
+
           const sentenceMatch = receivedMessage.match(
             /^(.+[。．！？\n.!?]|.{10,}[、,])/
           );

@@ -44,9 +44,9 @@ function speakWithBrowserTTS(text: string, onEnd?: () => void): boolean {
 }
 
 const createSpeakCharacter = () => {
-  let lastTime = 0;
   let prevFetchPromise: Promise<unknown> = Promise.resolve();
   let prevSpeakPromise: Promise<unknown> = Promise.resolve();
+  let ttsFailed = false; // Cache: once TTS backend fails, skip it for subsequent sentences
 
   return (
     screenplay: Screenplay,
@@ -58,35 +58,35 @@ const createSpeakCharacter = () => {
     onComplete?: () => void
   ) => {
     const fetchPromise = prevFetchPromise.then(async () => {
-      const now = Date.now();
-      if (now - lastTime < 1000) {
-        await wait(1000 - (now - lastTime));
+      // Skip TTS fetch entirely if we know the backend is failing
+      if (ttsFailed) {
+        return null;
       }
 
-      lastTime = Date.now();
-
-      // First try fetching audio from TTS backend
       try {
         const buffer = await fetchAudio(screenplay.talk.message, voiceId);
         return buffer;
       } catch (err) {
-        console.warn('TTS backend fetch failed, trying browser speech:', err);
-        return null; // Will trigger fallback
+        console.warn('TTS backend failed, using browser speech:', err);
+        ttsFailed = true; // Cache failure — skip backend for rest of conversation
+        return null;
       }
     });
 
+    // Fire onStart immediately so text feedback shows before audio is ready
+    onStart?.();
+
     prevFetchPromise = fetchPromise;
     prevSpeakPromise = Promise.all([fetchPromise, prevSpeakPromise]).then(([audioBuffer]) => {
-      onStart?.();
-
       if (audioBuffer) {
         // Backend TTS succeeded — use it with lip sync
         return viewer.model?.speak(audioBuffer, screenplay);
       }
 
       // Backend TTS failed — try browser's built-in TTS as fallback
+      // Note: onComplete is handled by the promise chain below, so we don't pass it here
       const cleanText = screenplay.talk.message.replace(/\[([a-zA-Z]*?)\]/g, "").trim();
-      if (cleanText && speakWithBrowserTTS(cleanText, onComplete)) {
+      if (cleanText && speakWithBrowserTTS(cleanText)) {
         // Browser TTS fallback — character expression only (no lip sync data)
         if (screenplay.expression) {
           viewer.model?.emoteController?.playEmotion(screenplay.expression);
@@ -110,18 +110,24 @@ export const fetchAudio = async (text: string, voiceId: string = "en-US-JennyNeu
   // Pre-warm AudioContext (must be called from user gesture chain on mobile)
   initAudioContext();
 
-  const response = await fetch(`${BACKEND_URL}/tts`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text: text,
-      voice_id: voiceId,
-    }),
-  });
+  // Add timeout to prevent hanging on mobile (flaky networks, dead backend)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-  if (!response.ok) {
-    throw new Error(`TTS request failed: ${response.status}`);
+  try {
+    const response = await fetch(`${BACKEND_URL}/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voice_id: voiceId }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`TTS request failed: ${response.status}`);
+    }
+
+    return await response.arrayBuffer();
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return await response.arrayBuffer();
 };

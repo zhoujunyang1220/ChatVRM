@@ -1,8 +1,8 @@
 import http from "http";
+import https from "https";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-const BACKEND_HOST = "localhost";
-const BACKEND_PORT = 8002;
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://Zjy1220-chatvrm-backend.hf.space";
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,11 +12,19 @@ export default async function handler(
     return res.status(405).end();
   }
 
+  if (!BACKEND_URL) {
+    return res.status(502).json({ error: "No backend URL configured" });
+  }
+
+  const url = new URL(BACKEND_URL);
+  const isHttps = url.protocol === "https:";
+  const transport = isHttps ? https : http;
+
   const body = JSON.stringify(req.body);
 
   const options: http.RequestOptions = {
-    hostname: BACKEND_HOST,
-    port: BACKEND_PORT,
+    hostname: url.hostname,
+    port: url.port ? parseInt(url.port) : isHttps ? 443 : 80,
     path: "/chat",
     method: "POST",
     headers: {
@@ -24,10 +32,11 @@ export default async function handler(
       "Content-Length": Buffer.byteLength(body),
     },
     agent: false,
+    timeout: 30000,
   };
 
   return new Promise<void>((resolve) => {
-    const proxyReq = http.request(options, (proxyRes) => {
+    const proxyReq = transport.request(options, (proxyRes) => {
       res.writeHead(proxyRes.statusCode || 200, {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
@@ -44,6 +53,12 @@ export default async function handler(
     proxyReq.on("error", (err) => {
       console.error("Chat proxy error:", err);
       res.status(502).json({ error: "Backend connection failed" });
+      resolve();
+    });
+
+    proxyReq.on("timeout", () => {
+      proxyReq.destroy();
+      res.status(504).json({ error: "Backend timeout" });
       resolve();
     });
 
