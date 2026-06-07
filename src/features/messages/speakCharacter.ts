@@ -3,7 +3,7 @@ import { Viewer } from "../vrmViewer/viewer";
 import { Screenplay } from "./messages";
 import { ElevenLabsParam } from "../constants/elevenLabsParam";
 
-const BACKEND_URL = "/api";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 const createSpeakCharacter = () => {
   let lastTime = 0;

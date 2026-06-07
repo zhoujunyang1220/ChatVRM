@@ -8,7 +8,7 @@ import { CHARACTER_PRESETS } from "@/features/constants/characterPresets";
 import { VRM_MODEL_PRESETS, CustomVrmModel } from "@/features/constants/vrmModelPresets";
 import { LANGUAGE_PRESETS } from "@/features/constants/languagePresets";
 
-const BACKEND_URL = "/api";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 type Voice = {
   id: string;

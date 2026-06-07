@@ -1,6 +1,6 @@
 import { Message } from "../messages/messages";
 
-const BACKEND_URL = "/api";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export async function getChatResponseStream(
   messages: Message[],

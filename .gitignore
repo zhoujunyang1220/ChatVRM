@@ -31,6 +31,14 @@ yarn-error.log*
 # vercel
 .vercel
 
+# python
+__pycache__/
+*.pyc
+*.pyo
+
+# capacitor / mobile build artifacts
+/android/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

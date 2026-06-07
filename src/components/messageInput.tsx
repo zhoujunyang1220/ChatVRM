@@ -68,7 +68,7 @@ export const MessageInput = ({
         </div>
       </div>
       <div className="py-3 bg-transparent text-center text-text-secondary text-xs font-Montserrat tracking-wider">
-        powered by DeepSeek &middot; three-vrm &middot; VRoid
+        powered by Agnes &middot; three-vrm &middot; VRoid
       </div>
     </div>
   );

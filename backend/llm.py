@@ -5,26 +5,18 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"), override=True)
 
-API_KEY = os.getenv("DEEPSEEK_API_KEY")
-API_BASE = os.getenv("DEEPSEEK_API_BASE", "https://api.deepseek.com")
+API_KEY = os.getenv("AGNES_API_KEY")
+API_BASE = os.getenv("AGNES_API_BASE", "https://apihub.agnes-ai.com")
 
 if not API_KEY:
-    raise ValueError("DEEPSEEK_API_KEY not found in .env")
+    raise ValueError("AGNES_API_KEY not found in .env")
 
 
 def chat_stream(messages: list[dict]) -> requests.Response:
-    """Call DeepSeek API with streaming.
-
-    Args:
-        messages: Full message list including system prompt.
-
-    Returns:
-        A requests.Response with streaming enabled (SSE format).
-    """
     url = f"{API_BASE}/v1/chat/completions"
 
     payload = {
-        "model": "deepseek-chat",
+        "model": "agnes-2.0-flash",
         "messages": messages,
         "temperature": 0.7,
         "max_tokens": 500,
@@ -50,10 +42,6 @@ def chat_stream(messages: list[dict]) -> requests.Response:
 
 
 def parse_stream_line(line: str) -> str | None:
-    """Parse a single SSE line from DeepSeek API response.
-
-    Returns the content delta string, or None if the line contains no content.
-    """
     line = line.strip()
     if not line.startswith("data:"):
         return None
