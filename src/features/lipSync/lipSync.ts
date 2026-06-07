@@ -28,7 +28,8 @@ export class LipSync {
   }
 
   public update(): LipSyncAnalyzeResult {
-    this.analyser.getFloatTimeDomainData(this.timeDomainData);
+    this.ensureAudio();
+    this.analyser!.getFloatTimeDomainData(this.timeDomainData);
 
     let volume = 0.0;
     for (let i = 0; i < TIME_DOMAIN_DATA_LENGTH; i++) {
