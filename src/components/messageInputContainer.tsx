@@ -1,5 +1,6 @@
 import { MessageInput } from "@/components/messageInput";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { initAudioContext } from "@/features/lipSync/lipSync";
 
 type Props = {
   isChatProcessing: boolean;
@@ -79,6 +80,8 @@ export const MessageInputContainer = ({
   const handleClickMicButton = useCallback(() => {
     if (!hasMicSupport) return;
 
+    initAudioContext(); // Must be called from user gesture on mobile
+
     if (isMicRecording) {
       speechRecognition?.abort();
       setIsMicRecording(false);
@@ -102,6 +105,7 @@ export const MessageInputContainer = ({
   }, [isMicRecording, speechRecognition, hasMicSupport]);
 
   const handleClickSendButton = useCallback(() => {
+    initAudioContext(); // Must be called from user gesture on mobile
     onChatProcessStart(userMessage);
   }, [onChatProcessStart, userMessage]);
 
@@ -150,6 +154,7 @@ export const MessageInputContainer = ({
         keyboardHeight={keyboardHeight}
         onKeyDownUserMessage={(e) => {
           if (e.key === "Enter") {
+            initAudioContext();
             handleClickSendButton();
           }
         }}

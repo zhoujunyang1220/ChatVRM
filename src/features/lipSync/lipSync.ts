@@ -2,16 +2,35 @@ import { LipSyncAnalyzeResult } from "./lipSyncAnalyzeResult";
 
 const TIME_DOMAIN_DATA_LENGTH = 2048;
 
+// Shared AudioContext singleton — created on first user gesture
+let _sharedAudioContext: AudioContext | null = null;
+
+export function initAudioContext() {
+  if (!_sharedAudioContext || _sharedAudioContext.state === 'closed') {
+    _sharedAudioContext = new AudioContext();
+  }
+  if (_sharedAudioContext.state === 'suspended') {
+    _sharedAudioContext.resume().catch((e) => {
+      console.warn('LipSync: AudioContext resume failed:', e);
+    });
+  }
+  return _sharedAudioContext;
+}
+
+export function getAudioContext(): AudioContext {
+  if (!_sharedAudioContext || _sharedAudioContext.state === 'closed') {
+    _sharedAudioContext = new AudioContext();
+  }
+  return _sharedAudioContext;
+}
+
 export class LipSync {
   public audio?: AudioContext;
   public analyser?: AnalyserNode;
   public readonly timeDomainData: Float32Array;
 
-  public constructor(audio?: AudioContext) {
+  public constructor() {
     this.timeDomainData = new Float32Array(TIME_DOMAIN_DATA_LENGTH);
-    if (audio) {
-      this.initAudio(audio);
-    }
   }
 
   private initAudio(audio: AudioContext) {
@@ -20,11 +39,16 @@ export class LipSync {
   }
 
   private ensureAudio(): AudioContext {
+    const ctx = getAudioContext();
     if (!this.audio) {
-      const ctx = new AudioContext();
       this.initAudio(ctx);
     }
-    return this.audio!;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch((e) => {
+        console.warn('LipSync: resume failed:', e);
+      });
+    }
+    return ctx;
   }
 
   public update(): LipSyncAnalyzeResult {
@@ -47,9 +71,6 @@ export class LipSync {
 
   public async playFromArrayBuffer(buffer: ArrayBuffer, onEnded?: () => void) {
     const audio = this.ensureAudio();
-    if (audio.state === "suspended") {
-      await audio.resume();
-    }
     const audioBuffer = await audio.decodeAudioData(buffer);
 
     const bufferSource = audio.createBufferSource();

@@ -2,17 +2,15 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import "@charcoal-ui/icons";
 import { useEffect } from "react";
+import { initAudioContext } from "@/features/lipSync/lipSync";
 
 /**
- * Initialize AudioContext on first user interaction (required by mobile browsers)
+ * Initialize shared AudioContext on first user interaction (required by mobile browsers)
  */
 function initAudioOnUserGesture() {
   const handler = () => {
     try {
-      const ctx = new AudioContext();
-      if (ctx.state === "suspended") {
-        ctx.resume();
-      }
+      initAudioContext();
     } catch (e) {
       console.warn("AudioContext init failed:", e);
     }
