@@ -36,8 +36,13 @@ __pycache__/
 *.pyc
 *.pyo
 
-# capacitor / mobile build artifacts
-/android/
+# capacitor / mobile build artifacts (committed for native customizations)
+/android/.gradle/
+/android/build/
+/android/app/build/
+/android/captures/
+/android/.externalNativeBuild/
+/android/local.properties
 
 # typescript
 *.tsbuildinfo

@@ -2,7 +2,13 @@ import { buildUrl } from "@/utils/buildUrl";
 
 export const GitHubLink = () => {
   return (
-    <div className="absolute bottom-20 sm:bottom-4 left-2 sm:left-4 z-10">
+    <div
+      className="fixed z-10"
+      style={{
+        bottom: `calc(16px + var(--safe-area-bottom, 0px))`,
+        left: `calc(8px + var(--safe-area-left, 0px))`,
+      }}
+    >
       <a
         draggable={false}
         href="https://github.com/zoan37/ChatVRM"

@@ -19,9 +19,15 @@ export const ChatLog = ({ messages }: Props) => {
       block: "center",
     });
   }, [messages]);
+
   return (
-    <div className="absolute w-full h-[100svh] pb-48 sm:pb-64">
-      <div className="max-h-full px-2 sm:px-4 pt-20 sm:pt-24 pb-48 sm:pb-64 overflow-y-auto scroll-hidden">
+    <div className="fixed w-full h-full" style={{ zIndex: 5 }}>
+      <div
+        className="h-full px-2 sm:px-4 pt-20 sm:pt-24 overflow-y-auto scroll-hidden"
+        style={{
+          paddingBottom: `calc(140px + var(--safe-area-bottom, 0px) + var(--keyboard-offset, 0px))`,
+        }}
+      >
         {messages.map((msg, i) => {
           return (
             <div key={i} ref={messages.length - 1 === i ? chatScrollRef : null}>

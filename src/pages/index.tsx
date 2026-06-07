@@ -414,7 +414,11 @@ export default function Home() {
       <GitHubLink />
       <button
         onClick={toggleTheme}
-        className="fixed sm:absolute top-4 right-4 sm:right-20 z-10 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-surface1 hover:bg-surface1-hover border border-white/10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-all text-lg"
+        className="fixed z-10 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-surface1 hover:bg-surface1-hover border border-white/10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-all text-lg"
+        style={{
+          top: `calc(12px + var(--safe-area-top, 0px))`,
+          right: `calc(12px + var(--safe-area-right, 0px))`,
+        }}
         title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
       >
         {theme === "dark" ? "☀" : "☾"}

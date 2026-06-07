@@ -115,17 +115,29 @@ export const Settings = ({
   };
 
   return (
-    <div className="absolute z-40 w-full h-full bg-black/60 backdrop-blur-sm">
-      <div className="absolute top-6 left-6 z-10">
+    <div className="fixed z-40 w-full h-full bg-black/60 backdrop-blur-sm" style={{ top: 0, left: 0 }}>
+      <div
+        className="fixed z-10"
+        style={{ top: `calc(16px + var(--safe-area-top, 0px))`, left: `calc(16px + var(--safe-area-left, 0px))` }}
+      >
         <IconButton
           iconName="24/Close"
           isProcessing={false}
           onClick={onClickClose}
         />
       </div>
-      <div className="h-full overflow-auto">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-          <div className="glass-panel rounded-2xl p-6 sm:p-8">
+      <div
+        className="h-full overflow-auto"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-safe">
+          <div
+            className="glass-panel rounded-2xl p-6 sm:p-8 my-safe"
+            style={{
+              marginTop: `calc(64px + var(--safe-area-top, 0px))`,
+              marginBottom: `calc(32px + var(--safe-area-bottom, 0px))`,
+            }}
+          >
             <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-6 sm:mb-8 font-M_PLUS_2">Settings</h2>
 
             {/* Language Selection */}
@@ -202,7 +214,7 @@ export const Settings = ({
                     </button>
                     <button
                       onClick={() => onRemoveCustomModel(model.id)}
-                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-100 transition-opacity"
                       title="Remove"
                     >
                       ×
@@ -211,7 +223,7 @@ export const Settings = ({
                 ))}
               </div>
               <div className="flex gap-2 items-end">
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <label className="block text-xs text-text-secondary mb-1">Model Name</label>
                   <input
                     type="text"
@@ -224,7 +236,7 @@ export const Settings = ({
                 <button
                   onClick={handleAddCustomModel}
                   disabled={!newModelName.trim()}
-                  className="h-11 px-4 rounded-xl bg-primary/20 hover:bg-primary/30 border border-primary text-text-primary text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="h-11 px-4 shrink-0 rounded-xl bg-primary/20 hover:bg-primary/30 border border-primary text-text-primary text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Add VRM
                 </button>
@@ -303,7 +315,7 @@ export const Settings = ({
                         {value.role === "assistant" ? "AI" : "You"}
                       </span>
                       <input
-                        className="flex-1 px-4 py-2 rounded-xl bg-surface1 hover:bg-surface1-hover text-text-primary border border-white/5 outline-none transition-colors text-sm"
+                        className="flex-1 min-w-0 px-4 py-2 rounded-xl bg-surface1 hover:bg-surface1-hover text-text-primary border border-white/5 outline-none transition-colors text-sm"
                         type="text"
                         value={value.content}
                         onChange={(event) => onChangeChatLog(index, event.target.value)}

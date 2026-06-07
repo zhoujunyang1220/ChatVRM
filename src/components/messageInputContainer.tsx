@@ -1,5 +1,5 @@
 import { MessageInput } from "@/components/messageInput";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 type Props = {
   isChatProcessing: boolean;
@@ -22,6 +22,31 @@ export const MessageInputContainer = ({
   const [speechRecognition, setSpeechRecognition] =
     useState<SpeechRecognition>();
   const [isMicRecording, setIsMicRecording] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle mobile virtual keyboard via visualViewport API
+  useEffect(() => {
+    const visualViewport = window.visualViewport;
+    if (!visualViewport) return;
+
+    const handleResize = () => {
+      const windowHeight = window.innerHeight;
+      const viewportHeight = visualViewport.height;
+      const diff = windowHeight - viewportHeight;
+      // If diff > 100px, keyboard is likely open
+      if (diff > 100) {
+        setKeyboardHeight(diff);
+        document.documentElement.style.setProperty('--keyboard-offset', `${diff}px`);
+      } else {
+        setKeyboardHeight(0);
+        document.documentElement.style.setProperty('--keyboard-offset', '0px');
+      }
+    };
+
+    visualViewport.addEventListener('resize', handleResize);
+    return () => visualViewport.removeEventListener('resize', handleResize);
+  }, []);
 
   // 音声認識の結果を処理する
   const handleRecognitionResult = useCallback(
@@ -97,18 +122,21 @@ export const MessageInputContainer = ({
   }, [isChatProcessing]);
 
   return (
-    <MessageInput
-      userMessage={userMessage}
-      isChatProcessing={isChatProcessing}
-      isMicRecording={isMicRecording}
-      onKeyDownUserMessage={(e) => {
-        if (e.key === "Enter") {
-          handleClickSendButton();
-        }
-      }}
-      onChangeUserMessage={(e) => setUserMessage(e.target.value)}
-      onClickMicButton={handleClickMicButton}
-      onClickSendButton={handleClickSendButton}
-    />
+    <div ref={containerRef}>
+      <MessageInput
+        userMessage={userMessage}
+        isChatProcessing={isChatProcessing}
+        isMicRecording={isMicRecording}
+        keyboardHeight={keyboardHeight}
+        onKeyDownUserMessage={(e) => {
+          if (e.key === "Enter") {
+            handleClickSendButton();
+          }
+        }}
+        onChangeUserMessage={(e) => setUserMessage(e.target.value)}
+        onClickMicButton={handleClickMicButton}
+        onClickSendButton={handleClickSendButton}
+      />
+    </div>
   );
 };

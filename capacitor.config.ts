@@ -13,6 +13,11 @@ const config: CapacitorConfig = {
       backgroundColor: '#0D111F',
       androidSplashResourceName: 'splash',
     },
+    Keyboard: {
+      resize: 'body',
+      style: 'dark',
+      resizeOnFullScreen: true,
+    },
   },
 };
 

@@ -104,7 +104,10 @@ export const Menu = ({
 
   return (
     <>
-      <div className="absolute top-0 left-0 z-10 p-4 sm:p-6">
+      <div
+        className="fixed top-0 left-0 z-10 p-2 sm:p-6"
+        style={{ paddingTop: `calc(8px + var(--safe-area-top, 0px))` }}
+      >
         <div className="flex gap-2">
           <IconButton
             iconName="24/Menu"
