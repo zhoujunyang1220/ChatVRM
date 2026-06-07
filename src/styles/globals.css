@@ -1,0 +1,210 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Theme Variables ── */
+
+:root,
+[data-theme="dark"] {
+  --color-base: #0D111F;
+  --color-surface1: #1A1F2E;
+  --color-surface1-hover: #222837;
+  --color-surface3: #2A3042;
+  --color-surface3-hover: #323A4E;
+  --color-text-primary: #E8EAF0;
+  --color-text-secondary: #9CA0B0;
+  --color-primary: #7C5CBF;
+  --color-primary-hover: #8E6FD1;
+  --color-primary-press: #A082E0;
+  --color-primary-disabled: #7C5CBF4D;
+  --color-secondary: #FF6B8A;
+  --color-secondary-hover: #FF8AA3;
+  --color-secondary-press: #FFA3B8;
+  --color-secondary-disabled: #FF6B8A4D;
+  --bg-image: url(/bg-dark.png);
+}
+
+[data-theme="light"] {
+  --color-base: #F5F0EB;
+  --color-surface1: #FFFFFF;
+  --color-surface1-hover: #F8F6F3;
+  --color-surface3: #EDE8E0;
+  --color-surface3-hover: #E5DFD6;
+  --color-text-primary: #2D2A3D;
+  --color-text-secondary: #8A8698;
+  --color-primary: #7C5CBF;
+  --color-primary-hover: #8E6FD1;
+  --color-primary-press: #A082E0;
+  --color-primary-disabled: #7C5CBF4D;
+  --color-secondary: #FF6B8A;
+  --color-secondary-hover: #FF8AA3;
+  --color-secondary-press: #FFA3B8;
+  --color-secondary-disabled: #FF6B8A4D;
+  --bg-image: url(/bg-light.png);
+}
+
+/* ── Base Styles ── */
+
+html {
+  color-scheme: dark;
+  font-size: 16px;
+}
+
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+[data-theme="light"] html,
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--color-base);
+  background-image: var(--bg-image);
+  background-position: center;
+  background-attachment: fixed;
+  background-size: cover;
+  background-repeat: no-repeat;
+  color: var(--color-text-primary);
+  margin: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Touch Target Enhancements ── */
+@media (hover: none) {
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* ── Glow Effect ── */
+
+.glow-container {
+  position: relative;
+}
+.glow-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -25%;
+  width: 150%;
+  height: 200%;
+  background: radial-gradient(ellipse at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(124, 92, 191, 0.15) 0%,
+    rgba(255, 107, 138, 0.05) 40%,
+    transparent 70%);
+  pointer-events: none;
+  transition: opacity 0.3s;
+  opacity: 0;
+  z-index: 0;
+}
+.glow-container:focus-within::before {
+  opacity: 1;
+}
+
+/* ── Glass Panel ── */
+
+.glass-panel {
+  background: rgba(26, 31, 46, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+[data-theme="light"] .glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ── Custom Scrollbar ── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-surface3-hover);
+}
+
+/* ── Components ── */
+
+@layer components {
+  .input-range {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: var(--color-surface3);
+    height: 2px;
+    width: 100%;
+    border-radius: 4px;
+  }
+  .input-range:focus,
+  .input-range:active {
+    outline: none;
+  }
+  .input-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    position: relative;
+    width: 24px;
+    height: 24px;
+    display: block;
+    border: 2px solid var(--color-primary);
+    background-color: var(--color-surface1);
+    border-radius: 50%;
+    -webkit-border-radius: 50%;
+  }
+
+  /* Input text visibility fix */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea {
+    color: var(--color-text-primary) !important;
+  }
+
+  input[type="text"]::placeholder,
+  input[type="email"]::placeholder,
+  input[type="password"]::placeholder,
+  input[type="search"]::placeholder,
+  textarea::placeholder {
+    color: var(--color-text-secondary) !important;
+  }
+
+  input[type="text"]:disabled,
+  input[type="email"]:disabled,
+  input[type="password"]:disabled,
+  input[type="search"]:disabled,
+  textarea:disabled {
+    opacity: 0.6;
+  }
+}
+
+@layer utilities {
+  .scroll-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scroll-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}
