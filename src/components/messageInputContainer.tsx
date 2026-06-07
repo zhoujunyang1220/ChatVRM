@@ -7,12 +7,6 @@ type Props = {
   language?: string;
 };
 
-/**
- * テキスト入力と音声入力を提供する
- *
- * 音声認識の完了時は自動で送信し、返答文の生成中は入力を無効化する
- *
- */
 export const MessageInputContainer = ({
   isChatProcessing,
   onChatProcessStart,
@@ -23,18 +17,24 @@ export const MessageInputContainer = ({
     useState<SpeechRecognition>();
   const [isMicRecording, setIsMicRecording] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [hasMicSupport, setHasMicSupport] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setHasMicSupport(!!(window.webkitSpeechRecognition || window.SpeechRecognition));
+  }, []);
 
   // Handle mobile virtual keyboard via visualViewport API
   useEffect(() => {
     const visualViewport = window.visualViewport;
     if (!visualViewport) return;
 
+    let initialHeight = window.innerHeight;
+
     const handleResize = () => {
-      const windowHeight = window.innerHeight;
       const viewportHeight = visualViewport.height;
-      const diff = windowHeight - viewportHeight;
-      // If diff > 100px, keyboard is likely open
+      const diff = initialHeight - viewportHeight;
+      // Only react to significant changes (keyboard open/close)
       if (diff > 100) {
         setKeyboardHeight(diff);
         document.documentElement.style.setProperty('--keyboard-offset', `${diff}px`);
@@ -44,42 +44,62 @@ export const MessageInputContainer = ({
       }
     };
 
+    // Re-calibrate on orientation change
+    const handleOrientation = () => {
+      setTimeout(() => {
+        initialHeight = window.innerHeight;
+      }, 300);
+    };
+
     visualViewport.addEventListener('resize', handleResize);
-    return () => visualViewport.removeEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientation);
+    return () => {
+      visualViewport.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientation);
+    };
   }, []);
 
-  // 音声認識の結果を処理する
   const handleRecognitionResult = useCallback(
     (event: SpeechRecognitionEvent) => {
       const text = event.results[0][0].transcript;
       setUserMessage(text);
 
-      // 発言の終了時
       if (event.results[0].isFinal) {
         setUserMessage(text);
-        // 返答文の生成を開始
         onChatProcessStart(text);
       }
     },
     [onChatProcessStart]
   );
 
-  // 無音が続いた場合も終了する
   const handleRecognitionEnd = useCallback(() => {
     setIsMicRecording(false);
   }, []);
 
   const handleClickMicButton = useCallback(() => {
+    if (!hasMicSupport) return;
+
     if (isMicRecording) {
       speechRecognition?.abort();
       setIsMicRecording(false);
-
       return;
     }
 
-    speechRecognition?.start();
-    setIsMicRecording(true);
-  }, [isMicRecording, speechRecognition]);
+    // Request microphone permission explicitly on mobile
+    if (navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(() => {
+          speechRecognition?.start();
+          setIsMicRecording(true);
+        })
+        .catch((err) => {
+          console.warn("Microphone permission denied:", err);
+        });
+    } else {
+      speechRecognition?.start();
+      setIsMicRecording(true);
+    }
+  }, [isMicRecording, speechRecognition, hasMicSupport]);
 
   const handleClickSendButton = useCallback(() => {
     onChatProcessStart(userMessage);
@@ -93,7 +113,6 @@ export const MessageInputContainer = ({
       return;
     }
 
-    // Map our language IDs to speech recognition language codes
     const langMap: Record<string, string> = {
       en: "en-US",
       zh: "zh-CN",
@@ -127,6 +146,7 @@ export const MessageInputContainer = ({
         userMessage={userMessage}
         isChatProcessing={isChatProcessing}
         isMicRecording={isMicRecording}
+        hasMicSupport={hasMicSupport}
         keyboardHeight={keyboardHeight}
         onKeyDownUserMessage={(e) => {
           if (e.key === "Enter") {

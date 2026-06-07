@@ -377,9 +377,9 @@ export default function Home() {
   }, [handleSendChat, chatProcessing, isPlayingAudio, isAISpeaking]);
 
   return (
-    <div className={`${m_plus_2.variable} ${montserrat.variable}`}>
+    <div className={`${m_plus_2.variable} ${montserrat.variable} w-screen h-screen relative overflow-hidden`}>
       <Meta />
-      <Introduction />
+      <Introduction language={selectedLanguage} onStart={() => {}} />
       <VrmViewer />
       <MessageInputContainer
         isChatProcessing={chatProcessing}

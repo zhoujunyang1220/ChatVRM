@@ -5,6 +5,7 @@ type Props = {
   userMessage: string;
   isMicRecording: boolean;
   isChatProcessing: boolean;
+  hasMicSupport: boolean;
   keyboardHeight: number;
   onChangeUserMessage: (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -18,6 +19,7 @@ export const MessageInput = ({
   userMessage,
   isMicRecording,
   isChatProcessing,
+  hasMicSupport,
   keyboardHeight,
   onChangeUserMessage,
   onKeyDownUserMessage,
@@ -36,7 +38,7 @@ export const MessageInput = ({
 
   return (
     <div
-      className="fixed bottom-0 z-20 w-screen"
+      className="fixed bottom-0 z-30 w-screen"
       style={{
         paddingBottom: `calc(var(--safe-area-bottom, 0px) + ${keyboardHeight}px)`,
         transition: keyboardHeight > 0 ? 'none' : 'padding-bottom 0.3s ease',
@@ -49,13 +51,15 @@ export const MessageInput = ({
           onMouseMove={handleMouseMove}
         >
           <div className="relative z-10 flex items-center gap-2 sm:gap-3 p-2 sm:p-3">
-            <IconButton
-              iconName="24/Microphone"
-              isProcessing={isMicRecording}
-              disabled={isChatProcessing}
-              onClick={onClickMicButton}
-              className={isMicRecording ? "!bg-secondary" : ""}
-            />
+            {hasMicSupport && (
+              <IconButton
+                iconName="24/Microphone"
+                isProcessing={isMicRecording}
+                disabled={isChatProcessing}
+                onClick={onClickMicButton}
+                className={isMicRecording ? "!bg-secondary" : ""}
+              />
+            )}
             <input
               type="text"
               placeholder="Type a message or use the microphone..."

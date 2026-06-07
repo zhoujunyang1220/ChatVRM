@@ -21,11 +21,11 @@ export const ChatLog = ({ messages }: Props) => {
   }, [messages]);
 
   return (
-    <div className="fixed w-full h-full" style={{ zIndex: 5 }}>
+    <div className="fixed w-full h-full top-0 left-0" style={{ zIndex: 15 }}>
       <div
         className="h-full px-2 sm:px-4 pt-20 sm:pt-24 overflow-y-auto scroll-hidden"
         style={{
-          paddingBottom: `calc(140px + var(--safe-area-bottom, 0px) + var(--keyboard-offset, 0px))`,
+          paddingBottom: `calc(160px + var(--safe-area-bottom, 0px) + var(--keyboard-offset, 0px))`,
         }}
       >
         {messages.map((msg, i) => {
