@@ -9,7 +9,6 @@ import {
 import { speakCharacter } from "@/features/messages/speakCharacter";
 import { MessageInputContainer } from "@/components/messageInputContainer";
 import { SYSTEM_PROMPT } from "@/features/constants/systemPromptConstants";
-import { CHARACTER_PRESETS } from "@/features/constants/characterPresets";
 import { VRM_MODEL_PRESETS, CustomVrmModel } from "@/features/constants/vrmModelPresets";
 import { LANGUAGE_PRESETS } from "@/features/constants/languagePresets";
 import { KoeiroParam, DEFAULT_KOEIRO_PARAM } from "@/features/constants/koeiroParam";
@@ -45,7 +44,6 @@ export default function Home() {
   const { viewer } = useContext(ViewerContext);
 
   const [systemPrompt, setSystemPrompt] = useState(SYSTEM_PROMPT);
-  const [selectedCharacterId, setSelectedCharacterId] = useState("casual-friend");
   const [selectedVrmModelId, setSelectedVrmModelId] = useState("default");
   const [elevenLabsParam, setElevenLabsParam] = useState<ElevenLabsParam>(DEFAULT_ELEVEN_LABS_PARAM);
   const [selectedVoiceId, setSelectedVoiceId] = useState("en-US-JennyNeural");
@@ -66,7 +64,7 @@ export default function Home() {
     if (preset) return preset.name;
     const custom = customModels.find(m => m.id === selectedVrmModelId);
     if (custom) return custom.name;
-    return "Coach";
+    return "AI";
   }, [selectedVrmModelId, customModels]);
 
   useEffect(() => {
@@ -82,15 +80,11 @@ export default function Home() {
       );
       setSystemPrompt(params.systemPrompt);
       setElevenLabsParam(params.elevenLabsParam);
-      // Clear old chat log if it contains references to previous naming (Moki era)
       const oldLog: Message[] = params.chatLog || [];
       const hasOldName = oldLog.some(
         (m: Message) => m.role === "assistant" && /moki/i.test(m.content)
       );
       setChatLog(hasOldName ? [] : oldLog);
-      if (params.selectedCharacterId) {
-        setSelectedCharacterId(params.selectedCharacterId);
-      }
     }
     const savedVoice = localStorage.getItem('selectedVoiceId');
     if (savedVoice) {
@@ -119,7 +113,7 @@ export default function Home() {
     process.nextTick(() => {
       window.localStorage.setItem(
         "chatVRMParams",
-        JSON.stringify({ systemPrompt, elevenLabsParam, chatLog, selectedCharacterId })
+        JSON.stringify({ systemPrompt, elevenLabsParam, chatLog })
       )
     });
   }, [systemPrompt, elevenLabsParam, chatLog]);
@@ -316,15 +310,6 @@ export default function Home() {
     }
   }, [customModels, selectedVrmModelId, viewer]);
 
-  const handleChangeCharacter = useCallback((characterId: string) => {
-    const preset = CHARACTER_PRESETS.find((c) => c.id === characterId);
-    if (!preset) return;
-    setSelectedCharacterId(characterId);
-    setSystemPrompt(preset.systemPrompt);
-    setSelectedVoiceId(preset.recommendedVoiceId);
-    localStorage.setItem('selectedVoiceId', preset.recommendedVoiceId);
-  }, []);
-
   const handleChangeVrmModel = useCallback((modelId: string) => {
     const preset = VRM_MODEL_PRESETS.find((m) => m.id === modelId);
     if (preset) {
@@ -392,17 +377,15 @@ export default function Home() {
         assistantMessage={assistantMessage}
         characterName={characterName}
         selectedVoiceId={selectedVoiceId}
-        selectedCharacterId={selectedCharacterId}
         selectedVrmModelId={selectedVrmModelId}
         selectedLanguage={selectedLanguage}
         onChangeSystemPrompt={setSystemPrompt}
         onChangeChatLog={handleChangeChatLog}
-        onChangeCharacter={handleChangeCharacter}
         onChangeVrmModel={handleChangeVrmModel}
         onChangeLanguage={handleChangeLanguage}
         onVoiceChange={handleVoiceChange}
         handleClickResetChatLog={() => setChatLog([])}
-        handleClickResetSystemPrompt={() => { setSystemPrompt(SYSTEM_PROMPT); setSelectedCharacterId("casual-friend"); }}
+        handleClickResetSystemPrompt={() => setSystemPrompt(SYSTEM_PROMPT)}
         backgroundImage={backgroundImage}
         onChangeBackgroundImage={setBackgroundImage}
         onTokensUpdate={handleTokensUpdate}

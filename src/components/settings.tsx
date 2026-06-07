@@ -4,7 +4,6 @@ import { TextButton } from "./textButton";
 import { Message } from "@/features/messages/messages";
 import { Link } from "./link";
 import { RestreamTokens } from "./restreamTokens";
-import { CHARACTER_PRESETS } from "@/features/constants/characterPresets";
 import { VRM_MODEL_PRESETS, CustomVrmModel } from "@/features/constants/vrmModelPresets";
 import { LANGUAGE_PRESETS } from "@/features/constants/languagePresets";
 
@@ -22,13 +21,11 @@ type Props = {
   systemPrompt: string;
   chatLog: Message[];
   selectedVoiceId: string;
-  selectedCharacterId: string;
   selectedVrmModelId: string;
   selectedLanguage: string;
   onClickClose: () => void;
   onChangeSystemPrompt: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onChangeChatLog: (index: number, text: string) => void;
-  onChangeCharacter: (characterId: string) => void;
   onChangeVrmModel: (modelId: string) => void;
   onChangeLanguage: (languageId: string) => void;
   onClickOpenVrmFile: () => void;
@@ -49,13 +46,11 @@ export const Settings = ({
   systemPrompt,
   chatLog,
   selectedVoiceId,
-  selectedCharacterId,
   selectedVrmModelId,
   selectedLanguage,
   onClickClose,
   onChangeSystemPrompt,
   onChangeChatLog,
-  onChangeCharacter,
   onChangeVrmModel,
   onChangeLanguage,
   onClickOpenVrmFile,
@@ -143,7 +138,7 @@ export const Settings = ({
             {/* Language Selection */}
             <section className="mb-8">
               <h3 className="text-lg font-bold text-text-primary mb-3 font-M_PLUS_2">Language</h3>
-              <p className="text-sm text-text-secondary mb-3">Choose the language you want to practice.</p>
+              <p className="text-sm text-text-secondary mb-3">Choose the language you want the AI to use.</p>
               <div className="flex flex-wrap gap-2">
                 {LANGUAGE_PRESETS.map((lang) => (
                   <button
@@ -182,8 +177,8 @@ export const Settings = ({
 
             {/* VRM Model */}
             <section className="mb-8">
-              <h3 className="text-lg font-bold text-text-primary mb-3 font-M_PLUS_2">Character Model</h3>
-              <p className="text-sm text-text-secondary mb-3">Choose a preset model or add your own .vrm file.</p>
+              <h3 className="text-lg font-bold text-text-primary mb-3 font-M_PLUS_2">Avatar Model</h3>
+              <p className="text-sm text-text-secondary mb-3">Choose a visual avatar or upload your own .vrm file.</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
                 {VRM_MODEL_PRESETS.map((model) => (
                   <button
@@ -210,7 +205,7 @@ export const Settings = ({
                       }`}
                     >
                       <div className="font-bold text-sm">{model.name}</div>
-                      <div className="text-xs mt-0.5 opacity-70">Custom model</div>
+                      <div className="text-xs mt-0.5 opacity-70">Custom</div>
                     </button>
                     <button
                       onClick={() => onRemoveCustomModel(model.id)}
@@ -248,28 +243,6 @@ export const Settings = ({
                 ref={customFileInputRef}
                 onChange={handleCustomFileChange}
               />
-            </section>
-
-            {/* Character Preset */}
-            <section className="mb-8">
-              <h3 className="text-lg font-bold text-text-primary mb-3 font-M_PLUS_2">Character</h3>
-              <p className="text-sm text-text-secondary mb-3">Choose a coach personality. This will update the system prompt and suggest a voice.</p>
-              <div className="grid gap-2">
-                {CHARACTER_PRESETS.map((character) => (
-                  <button
-                    key={character.id}
-                    onClick={() => onChangeCharacter(character.id)}
-                    className={`w-full text-left px-4 py-3 min-h-[44px] rounded-xl border transition-colors ${
-                      selectedCharacterId === character.id
-                        ? "bg-primary/20 border-primary text-text-primary"
-                        : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary"
-                    }`}
-                  >
-                    <div className="font-bold text-sm">{character.name}</div>
-                    <div className="text-xs mt-0.5 opacity-70">{character.description}</div>
-                  </button>
-                ))}
-              </div>
             </section>
 
             {/* System Prompt */}

@@ -13,12 +13,10 @@ type Props = {
   assistantMessage: string;
   characterName: string;
   selectedVoiceId: string;
-  selectedCharacterId: string;
   selectedVrmModelId: string;
   selectedLanguage: string;
   onChangeSystemPrompt: (systemPrompt: string) => void;
   onChangeChatLog: (index: number, text: string) => void;
-  onChangeCharacter: (characterId: string) => void;
   onChangeVrmModel: (modelId: string) => void;
   onChangeLanguage: (languageId: string) => void;
   onVoiceChange: (voiceId: string) => void;
@@ -39,12 +37,10 @@ export const Menu = ({
   assistantMessage,
   characterName,
   selectedVoiceId,
-  selectedCharacterId,
   selectedVrmModelId,
   selectedLanguage,
   onChangeSystemPrompt,
   onChangeChatLog,
-  onChangeCharacter,
   onChangeVrmModel,
   onChangeLanguage,
   onVoiceChange,
@@ -132,13 +128,11 @@ export const Menu = ({
           systemPrompt={systemPrompt}
           chatLog={chatLog}
           selectedVoiceId={selectedVoiceId}
-          selectedCharacterId={selectedCharacterId}
           selectedVrmModelId={selectedVrmModelId}
           selectedLanguage={selectedLanguage}
           onClickClose={() => setShowSettings(false)}
           onChangeSystemPrompt={handleChangeSystemPrompt}
           onChangeChatLog={onChangeChatLog}
-          onChangeCharacter={onChangeCharacter}
           onChangeVrmModel={onChangeVrmModel}
           onChangeLanguage={onChangeLanguage}
           onClickOpenVrmFile={handleClickOpenVrmFile}
