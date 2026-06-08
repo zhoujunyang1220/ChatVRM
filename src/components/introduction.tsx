@@ -1,3 +1,4 @@
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 
 type Props = {
@@ -88,27 +89,47 @@ export const Introduction = ({ language, onStart }: Props) => {
   };
 
   return opened ? (
-    <div className="fixed z-50 w-full h-full bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" style={{ top: 0, left: 0 }}>
-      <div className="glass-panel rounded-2xl p-8 max-w-lg w-full mx-4">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="fixed z-50 w-full h-full bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" style={{ top: 0, left: 0 }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+        transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+        className="glass-panel rounded-2xl p-8 max-w-lg w-full mx-4"
+      >
         <h1 className="text-2xl font-bold text-text-primary mb-2 font-M_PLUS_2">{content.title}</h1>
         <p className="text-text-secondary text-sm mb-6 leading-relaxed">
           {content.subtitle}
         </p>
         <div className="space-y-3 mb-6">
           {content.steps.map((step, i) => (
-            <div key={i} className="flex items-start gap-3">
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 + i * 0.1, duration: 0.3 }}
+              className="flex items-start gap-3"
+            >
               <div className="w-6 h-6 rounded-full bg-primary/20 text-primary text-xs flex items-center justify-center shrink-0 mt-0.5">{i + 1}</div>
               <p className="text-text-secondary text-sm">{step}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
-        <button
+        <motion.button
           onClick={handleStart}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           className="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover active:bg-primary-press text-white font-bold transition-colors"
         >
           {content.button}
-        </button>
-      </div>
-    </div>
+        </motion.button>
+      </motion.div>
+    </motion.div>
   ) : null;
 };

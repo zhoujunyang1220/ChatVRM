@@ -1,16 +1,14 @@
 import { IconButton } from "./iconButton";
 import { Message } from "@/features/messages/messages";
-import { ChatLog } from "./chatLog";
 import React, { useCallback, useContext, useRef, useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 import { Settings } from "./settings";
 import { ViewerContext } from "@/features/vrmViewer/viewerContext";
-import { AssistantText } from "./assistantText";
 import { CustomVrmModel } from "@/features/constants/vrmModelPresets";
 
 type Props = {
   systemPrompt: string;
   chatLog: Message[];
-  assistantMessage: string;
   characterName: string;
   selectedVoiceId: string;
   selectedVrmModelId: string;
@@ -34,7 +32,6 @@ type Props = {
 export const Menu = ({
   systemPrompt,
   chatLog,
-  assistantMessage,
   characterName,
   selectedVoiceId,
   selectedVrmModelId,
@@ -55,7 +52,6 @@ export const Menu = ({
   onRemoveCustomModel,
 }: Props) => {
   const [showSettings, setShowSettings] = useState(false);
-  const [showChatLog, setShowChatLog] = useState(false);
   const { viewer } = useContext(ViewerContext);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -111,20 +107,12 @@ export const Menu = ({
             isProcessing={false}
             onClick={() => setShowSettings(true)}
           />
-          <IconButton
-            iconName={showChatLog ? "24/CommentOutline" : "24/CommentFill"}
-            label="Log"
-            isProcessing={false}
-            disabled={chatLog.length <= 0}
-            onClick={() => setShowChatLog(!showChatLog)}
-          />
         </div>
       </div>
 
-      {showChatLog && <ChatLog messages={chatLog} />}
-
       {showSettings && (
-        <Settings
+        <AnimatePresence>
+          <Settings
           systemPrompt={systemPrompt}
           chatLog={chatLog}
           selectedVoiceId={selectedVoiceId}
@@ -147,10 +135,7 @@ export const Menu = ({
           onAddCustomModel={onAddCustomModel}
           onRemoveCustomModel={onRemoveCustomModel}
         />
-      )}
-
-      {!showChatLog && assistantMessage && (
-        <AssistantText message={assistantMessage} characterName={characterName} />
+        </AnimatePresence>
       )}
 
       <input

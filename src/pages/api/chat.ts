@@ -32,13 +32,13 @@ export default async function handler(
       "Content-Length": Buffer.byteLength(body),
     },
     agent: false,
-    timeout: 30000,
+    timeout: 90000,
   };
 
   return new Promise<void>((resolve) => {
     const proxyReq = transport.request(options, (proxyRes) => {
       res.writeHead(proxyRes.statusCode || 200, {
-        "Content-Type": "text/event-stream",
+        "Content-Type": "text/event-stream; charset=utf-8",
         "Cache-Control": "no-cache",
         "Connection": "keep-alive",
       });

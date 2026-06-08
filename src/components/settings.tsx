@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { IconButton } from "./iconButton";
 import { TextButton } from "./textButton";
 import { Message } from "@/features/messages/messages";
@@ -110,7 +111,14 @@ export const Settings = ({
   };
 
   return (
-    <div className="fixed z-40 w-full h-full bg-black/60 backdrop-blur-sm" style={{ top: 0, left: 0 }}>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed z-40 w-full h-full bg-black/60 backdrop-blur-sm"
+      style={{ top: 0, left: 0 }}
+    >
       <div
         className="fixed z-10"
         style={{ top: `calc(16px + var(--safe-area-top, 0px))`, left: `calc(16px + var(--safe-area-left, 0px))` }}
@@ -121,7 +129,12 @@ export const Settings = ({
           onClick={onClickClose}
         />
       </div>
-      <div
+
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 20, scale: 0.97 }}
+        transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
         className="h-full overflow-auto"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
@@ -135,7 +148,7 @@ export const Settings = ({
           >
             <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-6 sm:mb-8 font-M_PLUS_2">Settings</h2>
 
-            {/* Language Selection */}
+            {/* Language */}
             <section className="mb-8">
               <h3 className="text-lg font-bold text-text-primary mb-3 font-M_PLUS_2">Language</h3>
               <p className="text-sm text-text-secondary mb-3">Choose the language you want the AI to use.</p>
@@ -144,10 +157,10 @@ export const Settings = ({
                   <button
                     key={lang.id}
                     onClick={() => onChangeLanguage(lang.id)}
-                    className={`px-4 py-2 min-h-[44px] rounded-xl border transition-colors text-sm ${
+                    className={`px-4 py-2 min-h-[44px] rounded-xl border transition-all duration-200 text-sm ${
                       selectedLanguage === lang.id
-                        ? "bg-primary/20 border-primary text-text-primary"
-                        : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary"
+                        ? "bg-primary/20 border-primary text-text-primary shadow-[0_0_12px_rgba(124,92,191,0.2)]"
+                        : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary hover:border-white/20"
                     }`}
                   >
                     <span className="font-bold">{lang.nativeName}</span>
@@ -157,7 +170,7 @@ export const Settings = ({
               </div>
             </section>
 
-            {/* Voice Selection */}
+            {/* Voice */}
             <section className="mb-8">
               <h3 className="text-lg font-bold text-text-primary mb-3 font-M_PLUS_2">Voice</h3>
               <select
@@ -184,10 +197,10 @@ export const Settings = ({
                   <button
                     key={model.id}
                     onClick={() => onChangeVrmModel(model.id)}
-                    className={`text-left px-3 py-2.5 min-h-[44px] rounded-xl border transition-colors ${
+                    className={`text-left px-3 py-2.5 min-h-[44px] rounded-xl border transition-all duration-200 ${
                       selectedVrmModelId === model.id
-                        ? "bg-primary/20 border-primary text-text-primary"
-                        : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary"
+                        ? "bg-primary/20 border-primary text-text-primary shadow-[0_0_12px_rgba(124,92,191,0.2)]"
+                        : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary hover:border-white/20"
                     }`}
                   >
                     <div className="font-bold text-sm">{model.name}</div>
@@ -198,7 +211,7 @@ export const Settings = ({
                   <div key={model.id} className="relative group">
                     <button
                       onClick={() => onChangeVrmModel(model.id)}
-                      className={`w-full text-left px-3 py-2.5 min-h-[44px] rounded-xl border transition-colors ${
+                      className={`w-full text-left px-3 py-2.5 min-h-[44px] rounded-xl border transition-all duration-200 ${
                         selectedVrmModelId === model.id
                           ? "bg-primary/20 border-primary text-text-primary"
                           : "bg-surface1 hover:bg-surface1-hover border-white/10 text-text-secondary"
@@ -209,7 +222,7 @@ export const Settings = ({
                     </button>
                     <button
                       onClick={() => onRemoveCustomModel(model.id)}
-                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-100 hover:opacity-80 transition-opacity"
                       title="Remove"
                     >
                       ×
@@ -231,7 +244,7 @@ export const Settings = ({
                 <button
                   onClick={handleAddCustomModel}
                   disabled={!newModelName.trim()}
-                  className="h-11 px-4 shrink-0 rounded-xl bg-primary/20 hover:bg-primary/30 border border-primary text-text-primary text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="h-11 px-4 shrink-0 rounded-xl bg-primary/20 hover:bg-primary/30 border border-primary text-text-primary text-sm font-bold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-[0_0_12px_rgba(124,92,191,0.25)]"
                 >
                   Add VRM
                 </button>
@@ -300,7 +313,7 @@ export const Settings = ({
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

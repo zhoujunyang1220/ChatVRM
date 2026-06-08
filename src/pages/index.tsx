@@ -14,10 +14,14 @@ import { LANGUAGE_PRESETS } from "@/features/constants/languagePresets";
 import { KoeiroParam, DEFAULT_KOEIRO_PARAM } from "@/features/constants/koeiroParam";
 import { getChatResponseStream } from "@/features/chat/openAiChat";
 import { M_PLUS_2, Montserrat } from "next/font/google";
+import { ChatBubble } from "@/components/chatBubble";
+import { TypingIndicator } from "@/components/typingIndicator";
+import { AnimatePresence } from "framer-motion";
 import { Introduction } from "@/components/introduction";
 import { Menu } from "@/components/menu";
 import { GitHubLink } from "@/components/githubLink";
 import { Meta } from "@/components/meta";
+import { ThemeToggle } from "@/components/themeToggle";
 import { ElevenLabsParam, DEFAULT_ELEVEN_LABS_PARAM } from "@/features/constants/elevenLabsParam";
 import { buildUrl } from "@/utils/buildUrl";
 import { websocketService } from '../services/websocketService';
@@ -55,9 +59,14 @@ export default function Home() {
   const [restreamTokens, setRestreamTokens] = useState<any>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [customModels, setCustomModels] = useState<CustomVrmModel[]>([]);
   const [customModelBlobs, setCustomModelBlobs] = useState<Record<string, string>>({});
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  /* ── lamp state (replaces old theme toggle) ── */
+  const [lampOn, setLampOn] = useState(true);   // starts ON (dark mode needs light)
+  const [shadeHue, setShadeHue] = useState(42);
+  const theme: "dark" | "light" = lampOn ? "dark" : "light";
 
   const characterName = useMemo(() => {
     const preset = VRM_MODEL_PRESETS.find(m => m.id === selectedVrmModelId);
@@ -67,12 +76,15 @@ export default function Home() {
     return "AI";
   }, [selectedVrmModelId, customModels]);
 
+  const speechRecognitionLang = useMemo(() => {
+    const preset = LANGUAGE_PRESETS.find(l => l.id === selectedLanguage);
+    return preset?.speechRecognitionLang || "en-US";
+  }, [selectedLanguage]);
+
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-    document.documentElement.setAttribute("data-theme", savedTheme || "dark");
+    const savedLampOn = localStorage.getItem("lampOn");
+    setLampOn(savedLampOn !== "false"); // default true (dark mode)
+    document.documentElement.setAttribute("data-theme", savedLampOn !== "false" ? "dark" : "light");
 
     if (window.localStorage.getItem("chatVRMParams")) {
       const params = JSON.parse(
@@ -107,6 +119,13 @@ export default function Home() {
     if (savedCustomModels) {
       setCustomModels(JSON.parse(savedCustomModels));
     }
+
+    // Pre-warm backend to reduce cold start delay
+    fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: '' }] }),
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -118,10 +137,16 @@ export default function Home() {
     });
   }, [systemPrompt, elevenLabsParam, chatLog]);
 
+  /* sync theme + CSS variables with lamp state */
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+    localStorage.setItem("lampOn", String(lampOn));
+  }, [theme, lampOn]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--on", lampOn ? "1" : "0");
+    document.documentElement.style.setProperty("--shade-hue", String(shadeHue));
+  }, [lampOn, shadeHue]);
 
   useEffect(() => {
     if (backgroundImage) {
@@ -174,11 +199,25 @@ export default function Home() {
     [viewer, elevenLabsParam]
   );
 
+  const getNameInstruction = (name: string, lang: string): string => {
+    const map: Record<string, string> = {
+      en: `Your name is ${name}. Always refer to yourself as ${name}. Never use a different name.`,
+      zh: `你的名字是${name}。始终自称${name}。不要使用其他名字。`,
+      ja: `あなたの名前は${name}です。常に自分を${name}と呼んでください。他の名前は使わないでください。`,
+      ko: `당신의 이름은 ${name}입니다. 항상 자신을 ${name}이라고 부르세요. 다른 이름을 사용하지 마세요.`,
+      es: `Tu nombre es ${name}. Siempre refiérete a ti mismo como ${name}. Nunca uses un nombre diferente.`,
+      fr: `Ton nom est ${name}. Réfère-toi toujours à toi-même comme ${name}. N'utilise jamais un autre nom.`,
+      de: `Dein Name ist ${name}. Bezeichne dich immer als ${name}. Verwende niemals einen anderen Namen.`,
+    };
+    return map[lang] || map.en;
+  };
+
   const handleSendChat = useCallback(
     async (text: string) => {
       const newMessage = text;
       if (newMessage == null) return;
 
+      setErrorMessage(null);
       setChatProcessing(true);
       const messageLog: Message[] = [
         ...chatLog,
@@ -187,7 +226,7 @@ export default function Home() {
       setChatLog(messageLog);
 
       const messageProcessor = new MessageMiddleOut();
-      const nameLine = `Your name is ${characterName}. Always refer to yourself as ${characterName}. Never use a different name.`;
+      const nameLine = getNameInstruction(characterName, selectedLanguage);
       const enhancedPrompt = `${nameLine}\n\n${systemPrompt}`;
       const processedMessages = messageProcessor.process([
         { role: "system", content: enhancedPrompt },
@@ -202,6 +241,7 @@ export default function Home() {
       );
       if (stream == null) {
         setChatProcessing(false);
+        setErrorMessage("Connection failed. Please check your network and try again.");
         return;
       }
 
@@ -257,6 +297,7 @@ export default function Home() {
         }
       } catch (e) {
         setChatProcessing(false);
+        setErrorMessage("AI response interrupted. Please try again.");
         console.error(e);
       } finally {
         reader.releaseLock();
@@ -335,12 +376,14 @@ export default function Home() {
     setSelectedLanguage(languageId);
     setSelectedVoiceId(preset.recommendedVoiceId);
     setSystemPrompt(preset.systemPrompt);
+    setChatLog([]); // clear history so AI doesn't get confused by old language
     localStorage.setItem('selectedLanguage', languageId);
     localStorage.setItem('selectedVoiceId', preset.recommendedVoiceId);
   }, []);
 
-  const toggleTheme = useCallback(() => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  const handleLampToggle = useCallback(() => {
+    setLampOn((prev) => !prev);
+    setShadeHue(Math.floor(Math.random() * 360));
   }, []);
 
   useEffect(() => {
@@ -368,16 +411,38 @@ export default function Home() {
     <div className={`${m_plus_2.variable} ${montserrat.variable} w-screen h-screen relative overflow-hidden`}>
       <Meta />
       <Introduction language={selectedLanguage} onStart={() => {}} />
+      <div className="ambient-gradient" />
       <VrmViewer />
+
+      <ChatBubble
+        messages={chatLog}
+        characterName={characterName}
+        streamingMessage={chatProcessing ? assistantMessage : undefined}
+      />
+
+      <AnimatePresence>
+        {chatProcessing && !assistantMessage && (
+          <TypingIndicator characterName={characterName} />
+        )}
+      </AnimatePresence>
+
+      {errorMessage && (
+        <div className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-red-500/15 backdrop-blur-md border border-red-500/30 text-red-400 text-sm shadow-lg"
+          style={{ bottom: `calc(140px + var(--safe-area-bottom, 0px) + var(--keyboard-offset, 0px))` }}
+        >
+          <span className="mr-2">⚠</span>
+          {errorMessage}
+        </div>
+      )}
+
       <MessageInputContainer
         isChatProcessing={chatProcessing}
         onChatProcessStart={handleSendChat}
-        language={selectedLanguage}
+        language={speechRecognitionLang}
       />
       <Menu
         systemPrompt={systemPrompt}
         chatLog={chatLog}
-        assistantMessage={assistantMessage}
         characterName={characterName}
         selectedVoiceId={selectedVoiceId}
         selectedVrmModelId={selectedVrmModelId}
@@ -398,17 +463,7 @@ export default function Home() {
         onRemoveCustomModel={handleRemoveCustomModel}
       />
       <GitHubLink />
-      <button
-        onClick={toggleTheme}
-        className="fixed z-10 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-surface1 hover:bg-surface1-hover border border-white/10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-all text-lg"
-        style={{
-          top: `calc(12px + var(--safe-area-top, 0px))`,
-          right: `calc(12px + var(--safe-area-right, 0px))`,
-        }}
-        title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-      >
-        {theme === "dark" ? "☀" : "☾"}
-      </button>
+      <ThemeToggle isOn={lampOn} onToggle={handleLampToggle} hue={shadeHue} />
     </div>
   );
 }

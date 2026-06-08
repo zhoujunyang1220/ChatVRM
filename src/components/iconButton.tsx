@@ -16,9 +16,10 @@ export const IconButton = ({
   return (
     <button
       {...rest}
-      className={`rounded-full text-sm p-3 min-w-[44px] min-h-[44px] text-center inline-flex items-center justify-center transition-all duration-200
+      className={`rounded-full text-sm p-3 min-w-[44px] min-h-[44px] text-center inline-flex items-center justify-center transition-all duration-200 ease-out
         bg-primary hover:bg-primary-hover active:bg-primary-press disabled:bg-primary-disabled text-white
         disabled:opacity-40 disabled:cursor-not-allowed
+        hover:shadow-[0_0_16px_rgba(124,92,191,0.35)] hover:scale-105 active:scale-95
         ${rest.className || ""}
       `}
     >
